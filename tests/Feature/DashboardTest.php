@@ -12,31 +12,48 @@ class DashboardTest extends TestCase
 
     public function test_guests_are_redirected_to_the_login_page(): void
     {
-        $response = $this->get(route('dashboard'));
-        $response->assertRedirect(route('login'));
+        $this->get(route('dashboard'))->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard(): void
+    public function test_admin_is_redirected_to_the_admin_dashboard(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->get(route('dashboard'));
-        $response
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('dashboard.admin'));
+
+        $this->get(route('dashboard.admin'))
             ->assertOk()
-            ->assertSee('Dashboard Guru')
-            ->assertSee('Jadwal mengajar hari ini');
+            ->assertSee('Dashboard Guru');
     }
 
-    public function test_authenticated_users_can_visit_the_student_dashboard(): void
+    public function test_teacher_is_redirected_to_the_teacher_dashboard(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $teacher = User::factory()->teacher()->create();
 
-        $response = $this->get(route('dashboard.siswa'));
-        $response
+        $this->actingAs($teacher)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('dashboard.guru'));
+    }
+
+    public function test_student_can_visit_the_student_dashboard(): void
+    {
+        $student = User::factory()->student(mustChangePassword: false)->create();
+
+        $this->actingAs($student)
+            ->get(route('dashboard.siswa'))
             ->assertOk()
             ->assertSee('Jadwal pelajaran')
             ->assertSee('Tugas terdekat');
+    }
+
+    public function test_roles_cannot_access_another_roles_dashboard(): void
+    {
+        $student = User::factory()->student(mustChangePassword: false)->create();
+
+        $this->actingAs($student)
+            ->get(route('dashboard.admin'))
+            ->assertForbidden();
     }
 }

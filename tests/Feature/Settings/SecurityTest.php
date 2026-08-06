@@ -24,9 +24,6 @@ class SecurityTest extends TestCase
             'confirm' => true,
             'confirmPassword' => true,
         ]);
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]);
     }
 
     public function test_security_settings_page_can_be_rendered(): void
@@ -39,8 +36,8 @@ class SecurityTest extends TestCase
 
         $response->assertOk();
 
-        $response->assertSee('Passkeys');
-        $response->assertSee('No passkeys yet');
+        $response->assertDontSee('No passkeys yet');
+        $response->assertDontSee('Manage your passkeys for passwordless sign-in');
         $response->assertSee('Two-factor authentication');
         $response->assertSee('Enable 2FA');
     }

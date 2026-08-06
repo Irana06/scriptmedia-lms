@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -44,6 +45,37 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->assignRole(Role::findOrCreate('admin'));
+        });
+    }
+
+    public function teacher(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->assignRole(Role::findOrCreate('guru'));
+        });
+    }
+
+    public function student(bool $mustChangePassword = true): static
+    {
+        $nisn = fake()->unique()->numerify('00########');
+
+        return $this
+            ->state(fn (): array => [
+                'email' => $nisn.'@students.invalid',
+                'username' => $nisn,
+                'nisn' => $nisn,
+                'nik' => fake()->numerify('################'),
+                'must_change_password' => $mustChangePassword,
+            ])
+            ->afterCreating(function (User $user): void {
+                $user->assignRole(Role::findOrCreate('siswa'));
+            });
     }
 
     /**

@@ -294,7 +294,8 @@
         @endif
     </x-settings.layout>
 
-    <flux:modal
+    @if ($canManagePasskeys)
+        <flux:modal
         name="delete-passkey-modal"
         class="max-w-md md:min-w-md"
         @close="closeDeleteModal"
@@ -323,5 +324,6 @@
                 </flux:button>
             </div>
         </div>
-    </flux:modal>
+        </flux:modal>
+    @endif
 </section>

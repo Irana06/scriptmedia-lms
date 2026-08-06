@@ -49,7 +49,7 @@
                             <flux:icon.home class="size-5" />
                             Dashboard
                         </a>
-                        <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white">
+                        <a href="{{ route('students.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white" wire:navigate>
                             <flux:icon.users class="size-5" />
                             Kelas & Siswa
                         </a>
@@ -84,7 +84,7 @@
                         </span>
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-semibold text-white">{{ auth()->user()?->name ?? 'Guru/Admin' }}</p>
-                            <p class="truncate text-xs text-white/50">Guru Matematika</p>
+                            <p class="truncate text-xs text-white/50">{{ auth()->user()?->hasRole('admin') ? 'Administrator' : 'Guru' }}</p>
                         </div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
