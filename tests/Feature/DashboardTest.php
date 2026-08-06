@@ -22,6 +22,21 @@ class DashboardTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));
-        $response->assertOk();
+        $response
+            ->assertOk()
+            ->assertSee('Dashboard Guru')
+            ->assertSee('Jadwal mengajar hari ini');
+    }
+
+    public function test_authenticated_users_can_visit_the_student_dashboard(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->get(route('dashboard.siswa'));
+        $response
+            ->assertOk()
+            ->assertSee('Jadwal pelajaran')
+            ->assertSee('Tugas terdekat');
     }
 }
