@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -25,6 +26,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $username
  * @property string|null $nisn
  * @property string|null $nik
+ * @property string|null $gender
+ * @property string|null $nip
  * @property bool $must_change_password
  * @property Carbon|null $email_verified_at
  * @property string $password
@@ -35,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'username', 'nisn', 'nik', 'password', 'must_change_password'])]
+#[Fillable(['name', 'email', 'username', 'nisn', 'nik', 'gender', 'nip', 'password', 'must_change_password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -66,6 +69,66 @@ class User extends Authenticatable implements PasskeyUser
     public function performedPasswordResets(): HasMany
     {
         return $this->hasMany(PasswordResetLog::class, 'reset_by_user_id');
+    }
+
+    /** @return HasMany<SchoolClass, $this> */
+    public function homeroomClasses(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class, 'homeroom_teacher_id');
+    }
+
+    /** @return HasMany<ClassSubject, $this> */
+    public function teachingAssignments(): HasMany
+    {
+        return $this->hasMany(ClassSubject::class, 'teacher_id');
+    }
+
+    /** @return BelongsToMany<SchoolClass, $this> */
+    public function schoolClasses(): BelongsToMany
+    {
+        return $this->belongsToMany(SchoolClass::class, 'class_students', 'student_id', 'class_id')->withTimestamps();
+    }
+
+    /** @return HasMany<DataImport, $this> */
+    public function dataImports(): HasMany
+    {
+        return $this->hasMany(DataImport::class, 'imported_by');
+    }
+
+    /** @return HasMany<AssignmentSubmission, $this> */
+    public function assignmentSubmissions(): HasMany
+    {
+        return $this->hasMany(AssignmentSubmission::class, 'student_id');
+    }
+
+    /** @return HasMany<QuizAttempt, $this> */
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class, 'student_id');
+    }
+
+    /** @return HasMany<Grade, $this> */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(Grade::class, 'student_id');
+    }
+
+    /** @return HasMany<Attendance, $this> */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'student_id');
+    }
+
+    /** @return HasMany<Announcement, $this> */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class, 'created_by');
+    }
+
+    /** @return HasMany<CalendarEvent, $this> */
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class, 'created_by');
     }
 
     public function sendPasswordResetNotification($token): void

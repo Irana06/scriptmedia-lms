@@ -25,7 +25,7 @@ class DashboardTest extends TestCase
 
         $this->get(route('dashboard.admin'))
             ->assertOk()
-            ->assertSee('Dashboard Guru');
+            ->assertSee('Ringkasan sekolah');
     }
 
     public function test_teacher_is_redirected_to_the_teacher_dashboard(): void
@@ -44,8 +44,8 @@ class DashboardTest extends TestCase
         $this->actingAs($student)
             ->get(route('dashboard.siswa'))
             ->assertOk()
-            ->assertSee('Jadwal pelajaran')
-            ->assertSee('Tugas terdekat');
+            ->assertSee('Jadwal hari ini')
+            ->assertSee('Tugas mendekati deadline');
     }
 
     public function test_roles_cannot_access_another_roles_dashboard(): void

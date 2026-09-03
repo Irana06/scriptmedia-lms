@@ -19,9 +19,9 @@
 
                 <nav class="ml-10 hidden items-center gap-2 md:flex" aria-label="Navigasi siswa">
                     <a href="{{ route('dashboard.siswa') }}" class="rounded-full bg-tosca-tint px-4 py-2 text-sm font-semibold text-navy-mid" wire:navigate>Beranda</a>
-                    <a href="#" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy">Materi</a>
-                    <a href="#" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy">Tugas</a>
-                    <a href="#" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy">Nilai</a>
+                    <a href="{{ route('student.learning.index', ['tab' => 'materials']) }}" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy" wire:navigate>Materi</a>
+                    <a href="{{ route('student.learning.index', ['tab' => 'assignments']) }}" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy" wire:navigate>Tugas</a>
+                    <a href="{{ route('student.evaluation.index') }}" class="rounded-full px-4 py-2 text-sm text-ink-soft hover:bg-offwhite hover:text-navy" wire:navigate>Nilai</a>
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
@@ -46,18 +46,18 @@
                     <flux:icon.home class="size-5" />
                     <span class="text-[11px] font-semibold">Beranda</span>
                 </a>
-                <a href="#" class="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft">
+                <a href="{{ route('student.learning.index', ['tab' => 'materials']) }}" class="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft" wire:navigate>
                     <flux:icon.book-open class="size-5" />
                     <span class="text-[11px]">Materi</span>
                 </a>
-                <a href="#" class="relative flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft">
+                <a href="{{ route('student.learning.index', ['tab' => 'assignments']) }}" class="relative flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft" wire:navigate>
                     <span class="absolute right-4 top-0 size-2 rounded-full bg-orange"></span>
                     <flux:icon.clipboard-document-check class="size-5" />
                     <span class="text-[11px]">Tugas</span>
                 </a>
-                <a href="{{ route('profile.edit') }}" class="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft" wire:navigate>
-                    <flux:icon.user-circle class="size-5" />
-                    <span class="text-[11px]">Profil</span>
+                <a href="{{ route('student.evaluation.index') }}" class="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-ink-soft" wire:navigate>
+                    <flux:icon.chart-bar class="size-5" />
+                    <span class="text-[11px]">Nilai</span>
                 </a>
             </div>
         </nav>

@@ -30,8 +30,14 @@ class RequiredPasswordController extends Controller
 
         $request->session()->regenerate();
 
+        $route = match (true) {
+            $request->user()->hasRole('admin') => 'dashboard.admin',
+            $request->user()->hasRole('guru') => 'dashboard.guru',
+            default => 'dashboard.siswa',
+        };
+
         return redirect()
-            ->route('dashboard.siswa')
-            ->with('status', 'Password berhasil diperbarui. Selamat belajar!');
+            ->route($route)
+            ->with('status', 'Password berhasil diperbarui.');
     }
 }

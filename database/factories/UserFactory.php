@@ -63,16 +63,18 @@ class UserFactory extends Factory
 
     public function student(bool $mustChangePassword = true): static
     {
-        $nisn = fake()->unique()->numerify('00########');
-
         return $this
-            ->state(fn (): array => [
-                'email' => $nisn.'@students.invalid',
-                'username' => $nisn,
-                'nisn' => $nisn,
-                'nik' => fake()->numerify('################'),
-                'must_change_password' => $mustChangePassword,
-            ])
+            ->state(function () use ($mustChangePassword): array {
+                $nisn = fake()->unique()->numerify('00########');
+
+                return [
+                    'email' => $nisn.'@students.invalid',
+                    'username' => $nisn,
+                    'nisn' => $nisn,
+                    'nik' => fake()->numerify('################'),
+                    'must_change_password' => $mustChangePassword,
+                ];
+            })
             ->afterCreating(function (User $user): void {
                 $user->assignRole(Role::findOrCreate('siswa'));
             });

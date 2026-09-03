@@ -1,6 +1,6 @@
 <x-layouts::auth title="Ganti Password">
     <div class="flex flex-col gap-6">
-        <x-auth-header title="Buat password baru" description="Untuk keamanan akun, ganti password sementara sebelum mulai belajar." />
+        <x-auth-header title="Buat password baru" description="Untuk keamanan akun, ganti password sementara sebelum menggunakan aplikasi." />
 
         <div class="rounded-xl border border-orange/30 bg-orange/10 p-4 text-sm leading-6 text-navy">
             Password baru hanya boleh diketahui oleh kamu. Jangan berikan kepada teman atau pihak lain.

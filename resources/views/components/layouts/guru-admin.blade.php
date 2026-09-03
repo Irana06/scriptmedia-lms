@@ -53,18 +53,57 @@
                             <flux:icon.users class="size-5" />
                             Kelas & Siswa
                         </a>
-                        <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white">
-                            <flux:icon.book-open class="size-5" />
-                            Materi
-                        </a>
-                        <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white">
-                            <flux:icon.clipboard-document-check class="size-5" />
-                            Tugas & Nilai
-                            <span class="ml-auto rounded-full bg-orange px-2 py-0.5 text-[10px] font-semibold text-navy">8</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white">
-                            <flux:icon.calendar-days class="size-5" />
-                            Presensi
+                        @role('admin')
+                            <a href="{{ route('admin.academic.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.academic.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.academic.*'),
+                            ]) wire:navigate>
+                                <flux:icon.building-library class="size-5" />
+                                Struktur Akademik
+                            </a>
+                            <a href="{{ route('admin.imports.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.imports.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.imports.*'),
+                            ]) wire:navigate>
+                                <flux:icon.document-arrow-up class="size-5" />
+                                Import Akun
+                            </a>
+                            <a href="{{ route('admin.report-cards.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.report-cards.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.report-cards.*'),
+                            ]) wire:navigate>
+                                <flux:icon.document-text class="size-5" />
+                                Rapor Siswa
+                            </a>
+                        @endrole
+                        @role('guru')
+                            <a href="{{ route('teacher.learning.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('teacher.learning.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('teacher.learning.*'),
+                            ]) wire:navigate>
+                                <flux:icon.book-open class="size-5" />
+                                Pembelajaran
+                            </a>
+                            <a href="{{ route('teacher.evaluation.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('teacher.evaluation.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('teacher.evaluation.*'),
+                            ]) wire:navigate>
+                                <flux:icon.clipboard-document-check class="size-5" />
+                                Nilai & Presensi
+                            </a>
+                        @endrole
+                        <a href="{{ route('communications.index') }}" @class([
+                            'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                            'bg-white/12 font-semibold text-white' => request()->routeIs('communications.*'),
+                            'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('communications.*'),
+                        ]) wire:navigate>
+                            <flux:icon.megaphone class="size-5" />
+                            Pengumuman & Kalender
                         </a>
                     </div>
 
