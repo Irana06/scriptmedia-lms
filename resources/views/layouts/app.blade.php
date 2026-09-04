@@ -1,5 +1,9 @@
-<x-layouts::app.sidebar :title="$title ?? null">
-    <flux:main>
+@role('siswa')
+    <x-layouts.siswa :title="$title ?? null">
         {{ $slot }}
-    </flux:main>
-</x-layouts::app.sidebar>
+    </x-layouts.siswa>
+@else
+    <x-layouts.guru-admin :title="$title ?? null">
+        {{ $slot }}
+    </x-layouts.guru-admin>
+@endrole

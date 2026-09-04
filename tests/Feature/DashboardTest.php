@@ -56,4 +56,23 @@ class DashboardTest extends TestCase
             ->get(route('dashboard.admin'))
             ->assertForbidden();
     }
+
+    public function test_settings_use_the_navigation_shell_for_each_role(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Struktur Akademik')
+            ->assertSee('Pengumuman & Kalender', false);
+
+        $student = User::factory()->student(mustChangePassword: false)->create();
+
+        $this->actingAs($student)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Navigasi bawah siswa')
+            ->assertDontSee('Struktur Akademik');
+    }
 }
