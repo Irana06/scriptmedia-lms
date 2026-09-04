@@ -44,19 +44,20 @@
                         <label class="block text-sm font-semibold text-navy">Judul<input wire:model="materialTitle" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         @error('materialTitle') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         <label class="block text-sm font-semibold text-navy">Deskripsi<textarea wire:model="materialDescription" rows="3" class="mt-2 w-full rounded-xl border border-line px-3 py-2"></textarea></label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="block text-sm font-semibold text-navy">Jenis
-                                <select wire:model.live="materialType" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3"><option value="pdf">PDF</option><option value="video">Video</option><option value="link">Tautan</option></select>
+                        <label class="block text-sm font-semibold text-navy">Urutan<input wire:model="materialOrder" type="number" min="0" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                        <div class="rounded-2xl border border-line bg-offwhite p-4">
+                            <label class="block text-sm font-semibold text-navy">Foto, video, atau PDF
+                                <input wire:model="materialUploads" type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,application/pdf" class="mt-2 block w-full text-sm" />
                             </label>
-                            <label class="block text-sm font-semibold text-navy">Urutan<input wire:model="materialOrder" type="number" min="0" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                            <p class="mt-2 text-xs leading-5 text-ink-soft">Bisa memilih beberapa file sekaligus. Maksimal 8 file, masing-masing 50 MB.</p>
+                            @error('materialUploads') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                            @error('materialUploads.*') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                        @if ($materialType === 'link')
-                            <label class="block text-sm font-semibold text-navy">Alamat tautan<input wire:model="materialLink" type="url" placeholder="https://..." class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
-                            @error('materialLink') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        @else
-                            <label class="block text-sm font-semibold text-navy">Pilih {{ $materialType === 'pdf' ? 'PDF' : 'video' }}<input wire:model="materialUpload" type="file" accept="{{ $materialType === 'pdf' ? '.pdf' : 'video/*' }}" class="mt-2 block w-full text-sm" /></label>
-                            @error('materialUpload') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        @endif
+                        <label class="block text-sm font-semibold text-navy">Tautan materi atau YouTube
+                            <textarea wire:model="materialLinks" rows="3" placeholder="Satu tautan per baris&#10;https://youtube.com/watch?v=..." class="mt-2 w-full rounded-xl border border-line px-3 py-2"></textarea>
+                        </label>
+                        <p class="-mt-2 text-xs leading-5 text-ink-soft">Lampiran file dan tautan boleh digunakan bersamaan.</p>
+                        @error('materialLinks') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         <x-theme.button type="submit" class="w-full" wire:loading.attr="disabled">Simpan materi</x-theme.button>
                     </form>
                 </x-theme.card>
@@ -71,7 +72,7 @@
                                 </div>
                                 <div class="mt-3 flex flex-wrap gap-2">
                                     @foreach ($material->files as $file)
-                                        <a href="{{ $file->type === 'link' ? $file->file_path : route('learning.files.material', $file) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-full bg-offwhite px-3 py-1.5 text-sm font-semibold text-navy"><flux:icon.arrow-top-right-on-square class="size-4" />{{ strtoupper($file->type) }}</a>
+                                        <a href="{{ $file->isExternal() ? $file->file_path : route('learning.files.material', $file) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 rounded-full bg-offwhite px-3 py-1.5 text-sm font-semibold text-navy"><flux:icon.arrow-top-right-on-square class="size-4" />{{ $file->youtubeVideoId() ? 'YOUTUBE' : strtoupper($file->type) }}</a>
                                     @endforeach
                                 </div>
                             </div>

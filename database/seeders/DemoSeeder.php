@@ -16,7 +16,9 @@ use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Models\Subject;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class DemoSeeder extends Seeder
 {
@@ -90,14 +92,44 @@ class DemoSeeder extends Seeder
         $math = $subjects->first();
         $science = $subjects->last();
 
-        Material::query()->updateOrCreate(
+        $mathMaterial = Material::query()->updateOrCreate(
             ['class_subject_id' => $math->id, 'title' => 'Mengenal Persamaan Linear'],
-            ['description' => 'Materi pengantar persamaan linear satu variabel beserta contoh penerapannya.', 'order' => 1],
+            ['description' => 'Pelajari konsep persamaan linear melalui ringkasan, visual, dan video. Buka setiap lampiran, lalu catat contoh penerapannya sebelum mengerjakan tugas.', 'order' => 1],
         );
-        Material::query()->updateOrCreate(
+        $scienceMaterial = Material::query()->updateOrCreate(
             ['class_subject_id' => $science->id, 'title' => 'Klasifikasi Makhluk Hidup'],
-            ['description' => 'Ringkasan ciri dan pengelompokan makhluk hidup.', 'order' => 1],
+            ['description' => 'Amati foto dan video, kemudian bandingkan ciri setiap kelompok makhluk hidup menggunakan tautan bacaan pendukung.', 'order' => 1],
         );
+
+        $pdfPath = 'learning/demo/ringkasan-persamaan-linear.pdf';
+        Storage::disk('local')->put($pdfPath, Pdf::loadHTML(<<<'HTML'
+            <html><body style="font-family: DejaVu Sans, sans-serif; color: #0b2545; padding: 28px;">
+                <h1 style="color: #0b2545;">Ringkasan Persamaan Linear</h1>
+                <p><strong>Tujuan:</strong> memahami bentuk ax + b = c dan menentukan nilai x.</p>
+                <h2 style="color: #177876;">Langkah penyelesaian</h2>
+                <ol><li>Sederhanakan kedua ruas.</li><li>Pindahkan konstanta ke ruas lainnya.</li><li>Bagi kedua ruas dengan koefisien x.</li></ol>
+                <div style="background: #f4fafa; border-left: 5px solid #f4a300; padding: 14px; margin: 20px 0;"><strong>Contoh:</strong> 2x + 4 = 10 → 2x = 6 → x = 3.</div>
+                <h2 style="color: #177876;">Latihan mandiri</h2>
+                <p>Selesaikan: 3x + 5 = 20, 4x - 8 = 12, dan 2(x + 3) = 14.</p>
+            </body></html>
+            HTML)->setPaper('a4')->output());
+        $mathMaterial->files()->where('file_path', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf')->delete();
+
+        foreach ([
+            ['type' => 'image', 'file_path' => 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80'],
+            ['type' => 'pdf', 'file_path' => $pdfPath],
+            ['type' => 'link', 'file_path' => 'https://www.youtube.com/watch?v=fNk_zzaMoSs'],
+        ] as $attachment) {
+            $mathMaterial->files()->updateOrCreate(['file_path' => $attachment['file_path']], ['type' => $attachment['type']]);
+        }
+
+        foreach ([
+            ['type' => 'image', 'file_path' => 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80'],
+            ['type' => 'video', 'file_path' => 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'],
+            ['type' => 'link', 'file_path' => 'https://id.wikipedia.org/wiki/Klasifikasi_biologis'],
+        ] as $attachment) {
+            $scienceMaterial->files()->updateOrCreate(['file_path' => $attachment['file_path']], ['type' => $attachment['type']]);
+        }
 
         Assignment::query()->updateOrCreate(
             ['class_subject_id' => $math->id, 'title' => 'Latihan Persamaan Linear'],

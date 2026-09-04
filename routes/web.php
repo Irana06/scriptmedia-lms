@@ -13,6 +13,7 @@ use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
 use App\Livewire\Admin\ReportCards;
 use App\Livewire\CommunicationManager;
+use App\Livewire\Student\ActivityCenter;
 use App\Livewire\Student\EvaluationSummary;
 use App\Livewire\Student\LearningCenter;
 use App\Livewire\Student\QuizPlayer;
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:siswa')->group(function () {
         Route::get('dashboard/siswa', [RoleDashboardController::class, 'student'])->name('dashboard.siswa');
+        Route::livewire('siswa/aktivitas', ActivityCenter::class)->name('student.activities.index');
         Route::livewire('siswa/belajar', LearningCenter::class)->name('student.learning.index');
         Route::livewire('siswa/kuis/{quiz}', QuizPlayer::class)->name('student.quizzes.play');
         Route::livewire('siswa/nilai', EvaluationSummary::class)->name('student.evaluation.index');

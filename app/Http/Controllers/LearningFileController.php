@@ -20,6 +20,10 @@ class LearningFileController extends Controller
             || $classSubject->schoolClass->students->contains('id', $user->id);
         abort_unless($allowed && $materialFile->type !== 'link', 403);
 
+        if ($request->boolean('preview') && in_array($materialFile->type, ['image', 'video', 'pdf'], true)) {
+            return Storage::disk('local')->response($materialFile->file_path, null, [], 'inline');
+        }
+
         return Storage::disk('local')->download($materialFile->file_path);
     }
 

@@ -8,6 +8,7 @@
         'tosca-soft' => 'bg-tosca-tint text-navy-mid',
         'orange' => 'bg-orange text-navy',
         'navy' => 'bg-navy text-white',
+        'danger' => 'bg-red-100 text-red-700',
         'neutral' => 'bg-offwhite text-ink-soft',
     ];
 @endphp

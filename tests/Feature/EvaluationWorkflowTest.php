@@ -8,6 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\Assignment;
 use App\Models\AssignmentGrade;
 use App\Models\AssignmentSubmission;
+use App\Models\Attendance;
 use App\Models\ClassSubject;
 use App\Models\Grade;
 use App\Models\Quiz;
@@ -119,6 +120,80 @@ class EvaluationWorkflowTest extends TestCase
             ->set('semesterId', (string) $semester->id)
             ->assertSee('87.00')
             ->assertDontSee('99.00');
+    }
+
+    public function test_student_sees_attendance_rate_and_recent_history(): void
+    {
+        [, $students, $classSubject, $semester] = $this->evaluationContext();
+        Attendance::query()->create([
+            'class_id' => $classSubject->class_id,
+            'student_id' => $students[0]->id,
+            'date' => '2026-09-01',
+            'status' => 'hadir',
+        ]);
+        Attendance::query()->create([
+            'class_id' => $classSubject->class_id,
+            'student_id' => $students[0]->id,
+            'date' => '2026-09-02',
+            'status' => 'izin',
+        ]);
+
+        $this->actingAs($students[0]);
+
+        Livewire::test(EvaluationSummary::class)
+            ->set('semesterId', (string) $semester->id)
+            ->assertSee('50%')
+            ->assertSee('01 Sep 2026')
+            ->assertSee('02 Sep 2026');
+    }
+
+    public function test_student_can_open_the_sources_of_a_published_final_grade(): void
+    {
+        [, $students, $classSubject, $semester] = $this->evaluationContext();
+        $assignment = Assignment::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => 'Latihan sumber nilai',
+            'deadline' => '2026-09-10 12:00:00',
+        ]);
+        $submission = AssignmentSubmission::query()->create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $students[0]->id,
+            'file_path' => 'testing/jawaban.pdf',
+            'submitted_at' => '2026-09-09 10:00:00',
+        ]);
+        AssignmentGrade::query()->create(['submission_id' => $submission->id, 'score' => 90]);
+        $quiz = Quiz::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => 'Kuis sumber nilai',
+            'duration_minutes' => 20,
+            'open_at' => '2026-09-15 08:00:00',
+            'close_at' => '2026-09-15 10:00:00',
+        ]);
+        QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'student_id' => $students[0]->id,
+            'started_at' => '2026-09-15 08:00:00',
+            'submitted_at' => '2026-09-15 08:15:00',
+            'score' => 80,
+        ]);
+        Grade::query()->create([
+            'student_id' => $students[0]->id,
+            'class_subject_id' => $classSubject->id,
+            'semester_id' => $semester->id,
+            'final_score' => 85,
+            'predikat' => 'B',
+        ]);
+
+        $this->actingAs($students[0]);
+
+        Livewire::test(EvaluationSummary::class)
+            ->set('semesterId', (string) $semester->id)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->assertSee('Rincian nilai')
+            ->assertSee('Latihan sumber nilai')
+            ->assertSee('Kuis sumber nilai')
+            ->assertSee('85.00')
+            ->assertSee('Sesuai hitung otomatis');
     }
 
     public function test_only_admin_can_download_student_report_card_pdf(): void

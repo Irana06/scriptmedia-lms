@@ -29,6 +29,9 @@ class LearningCenter extends Component
     #[Url]
     public string $tab = 'materials';
 
+    #[Url]
+    public string $assignmentId = '';
+
     public ?TemporaryUploadedFile $submissionFile = null;
 
     public function mount(): void

@@ -47,6 +47,11 @@ class LearningManager extends Component
 
     public ?TemporaryUploadedFile $materialUpload = null;
 
+    /** @var list<TemporaryUploadedFile> */
+    public array $materialUploads = [];
+
+    public string $materialLinks = '';
+
     public string $materialOrder = '1';
 
     public string $assignmentTitle = '';
@@ -91,18 +96,40 @@ class LearningManager extends Component
     public function saveMaterial(): void
     {
         $this->selectedAssignment();
-        $rules = [
+        $validated = $this->validate([
             'materialTitle' => ['required', 'string', 'max:255'],
             'materialDescription' => ['nullable', 'string', 'max:5000'],
-            'materialType' => ['required', Rule::in(['pdf', 'video', 'link'])],
+            'materialType' => ['required', Rule::in(['pdf', 'video', 'image', 'link'])],
             'materialOrder' => ['required', 'integer', 'min:0', 'max:999'],
-        ];
-        $rules[$this->materialType === 'link' ? 'materialLink' : 'materialUpload'] = $this->materialType === 'link'
-            ? ['required', 'url:http,https', 'max:2048']
-            : ['required', 'file', $this->materialType === 'pdf' ? 'mimes:pdf' : 'mimes:mp4,webm,mov', 'max:51200'];
-        $validated = $this->validate($rules);
+            'materialUploads' => ['nullable', 'array', 'max:8'],
+            'materialUploads.*' => ['file', 'mimes:pdf,mp4,webm,mov,jpg,jpeg,png,webp', 'max:51200'],
+            'materialLinks' => ['nullable', 'string', 'max:10000'],
+        ]);
 
-        DB::transaction(function () use ($validated): void {
+        $links = collect(preg_split('/\R+/', $this->materialLinks) ?: [])
+            ->map(fn (string $link): string => trim($link))
+            ->filter()
+            ->values();
+
+        if ($links->contains(fn (string $link): bool => ! $this->isValidMaterialUrl($link))) {
+            throw ValidationException::withMessages(['materialLinks' => 'Setiap tautan harus berupa URL http atau https yang valid.']);
+        }
+
+        if ($this->materialUpload !== null) {
+            $legacyRule = $this->materialType === 'pdf' ? 'mimes:pdf' : ($this->materialType === 'image' ? 'mimes:jpg,jpeg,png,webp' : 'mimes:mp4,webm,mov');
+            $this->validate(['materialUpload' => ['file', $legacyRule, 'max:51200']]);
+        }
+
+        if ($this->materialLink !== '' && $this->materialLink !== '0') {
+            $this->validate(['materialLink' => ['url:http,https', 'max:2048']]);
+            $links->push($this->materialLink);
+        }
+
+        if ($this->materialUploads === [] && $this->materialUpload === null && $links->isEmpty()) {
+            throw ValidationException::withMessages(['materialUploads' => 'Tambahkan minimal satu file atau tautan.']);
+        }
+
+        DB::transaction(function () use ($validated, $links): void {
             $material = Material::query()->create([
                 'class_subject_id' => $this->classSubjectId,
                 'title' => $validated['materialTitle'],
@@ -110,14 +137,26 @@ class LearningManager extends Component
                 'order' => $validated['materialOrder'],
             ]);
 
-            $path = $this->materialType === 'link'
-                ? $validated['materialLink']
-                : $this->materialUpload?->store("learning/materials/{$material->id}", 'local');
+            foreach ($this->materialUploads as $upload) {
+                $material->files()->create([
+                    'type' => $this->materialTypeForUpload($upload),
+                    'file_path' => $upload->store("learning/materials/{$material->id}", 'local'),
+                ]);
+            }
 
-            $material->files()->create(['type' => $this->materialType, 'file_path' => $path]);
+            if ($this->materialUpload !== null) {
+                $material->files()->create([
+                    'type' => $this->materialType,
+                    'file_path' => $this->materialUpload->store("learning/materials/{$material->id}", 'local'),
+                ]);
+            }
+
+            foreach ($links->unique() as $link) {
+                $material->files()->create(['type' => 'link', 'file_path' => $link]);
+            }
         });
 
-        $this->reset('materialTitle', 'materialDescription', 'materialLink', 'materialUpload');
+        $this->reset('materialTitle', 'materialDescription', 'materialLink', 'materialUpload', 'materialUploads', 'materialLinks');
         $this->materialType = 'pdf';
         session()->flash('learning_status', 'Materi berhasil ditambahkan.');
     }
@@ -127,7 +166,7 @@ class LearningManager extends Component
         $material = Material::query()->with('files')->findOrFail($id);
         $this->authorizeOwned($material->class_subject_id);
         foreach ($material->files as $file) {
-            if ($file->type !== 'link') {
+            if (! $file->isExternal()) {
                 Storage::disk('local')->delete($file->file_path);
             }
         }
@@ -305,5 +344,22 @@ class LearningManager extends Component
             ->with('grade')
             ->whereHas('assignment.classSubject', fn ($query) => $query->where('teacher_id', Auth::id()))
             ->findOrFail($id);
+    }
+
+    private function materialTypeForUpload(TemporaryUploadedFile $upload): string
+    {
+        $mimeType = $upload->getMimeType();
+
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'image';
+        }
+
+        return $mimeType === 'application/pdf' ? 'pdf' : 'video';
+    }
+
+    private function isValidMaterialUrl(string $url): bool
+    {
+        return filter_var($url, FILTER_VALIDATE_URL) !== false
+            && in_array(strtolower((string) parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], true);
     }
 }

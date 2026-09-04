@@ -52,9 +52,18 @@ class LearningWorkflowTest extends TestCase
         $this->actingAs($student);
         Livewire::test(LearningCenter::class)
             ->set('classSubjectId', (string) $classSubject->id)
+            ->assertSee('Buka detail')
+            ->assertSee('1 lampiran')
             ->set('submissionFile', UploadedFile::fake()->create('jawaban.pdf', 100, 'application/pdf'))
             ->call('submitAssignment', $assignment->id)
             ->assertHasNoErrors();
+
+        $previewResponse = $this->get(route('learning.files.material', [
+            'materialFile' => $material->files->firstOrFail(),
+            'preview' => 1,
+        ]));
+        $previewResponse->assertOk();
+        $this->assertStringStartsWith('inline;', (string) $previewResponse->headers->get('content-disposition'));
 
         $submission = AssignmentSubmission::query()->firstOrFail();
 
@@ -92,6 +101,41 @@ class LearningWorkflowTest extends TestCase
             ->assertHasErrors(['submissionFile']);
 
         $this->assertDatabaseCount('assignment_submissions', 0);
+    }
+
+    public function test_teacher_can_publish_a_material_with_mixed_media_attachments(): void
+    {
+        Storage::fake('local');
+        [$teacher, $student, $classSubject] = $this->learningContext();
+
+        $this->actingAs($teacher);
+        Livewire::test(LearningManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('materialTitle', 'Paket Belajar Multimedia')
+            ->set('materialDescription', 'Pelajari semua media berikut secara berurutan.')
+            ->set('materialUploads', [
+                UploadedFile::fake()->image('diagram.png'),
+                UploadedFile::fake()->create('ringkasan.pdf', 100, 'application/pdf'),
+                UploadedFile::fake()->create('penjelasan.mp4', 100, 'video/mp4'),
+            ])
+            ->set('materialLinks', "https://www.youtube.com/watch?v=fNk_zzaMoSs\nhttps://example.com/bacaan")
+            ->call('saveMaterial')
+            ->assertHasNoErrors();
+
+        $material = Material::query()->with('files')->firstOrFail();
+        $this->assertCount(5, $material->files);
+        $this->assertEqualsCanonicalizing(['image', 'pdf', 'video', 'link', 'link'], $material->files->pluck('type')->all());
+        $this->assertSame('fNk_zzaMoSs', $material->files->firstWhere('file_path', 'https://www.youtube.com/watch?v=fNk_zzaMoSs')?->youtubeVideoId());
+
+        $this->actingAs($student);
+        Livewire::test(LearningCenter::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->assertSee('5 lampiran')
+            ->assertSee('Video YouTube')
+            ->assertSee('Foto materi')
+            ->assertSee('Video materi')
+            ->assertSee('Dokumen PDF')
+            ->assertSee('Tautan pendukung');
     }
 
     public function test_five_multiple_choice_questions_are_graded_automatically(): void

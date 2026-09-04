@@ -20,6 +20,7 @@
                 <nav class="ml-10 hidden items-center gap-1 rounded-full bg-offwhite p-1 md:flex" aria-label="Navigasi siswa">
                     <a href="{{ route('dashboard.siswa') }}" @class(['rounded-full px-4 py-2 text-sm transition', 'bg-white font-semibold text-navy shadow-sm' => request()->routeIs('dashboard.siswa'), 'text-ink-soft hover:text-navy' => ! request()->routeIs('dashboard.siswa')]) wire:navigate>Beranda</a>
                     <a href="{{ route('student.learning.index', ['tab' => 'materials']) }}" @class(['rounded-full px-4 py-2 text-sm transition', 'bg-white font-semibold text-navy shadow-sm' => request()->routeIs('student.learning.*'), 'text-ink-soft hover:text-navy' => ! request()->routeIs('student.learning.*')]) wire:navigate>Belajar</a>
+                    <a href="{{ route('student.activities.index') }}" @class(['rounded-full px-4 py-2 text-sm transition', 'bg-white font-semibold text-navy shadow-sm' => request()->routeIs('student.activities.*'), 'text-ink-soft hover:text-navy' => ! request()->routeIs('student.activities.*')]) wire:navigate>Aktivitas</a>
                     <a href="{{ route('student.evaluation.index') }}" @class(['rounded-full px-4 py-2 text-sm transition', 'bg-white font-semibold text-navy shadow-sm' => request()->routeIs('student.evaluation.*'), 'text-ink-soft hover:text-navy' => ! request()->routeIs('student.evaluation.*')]) wire:navigate>Nilai</a>
                 </nav>
 
@@ -36,7 +37,7 @@
         </main>
 
         <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label="Navigasi bawah siswa">
-            <div class="mx-auto grid max-w-md grid-cols-4">
+            <div class="mx-auto grid max-w-lg grid-cols-5">
                 <a href="{{ route('dashboard.siswa') }}" @class(['flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 transition', 'bg-tosca-tint font-semibold text-navy' => request()->routeIs('dashboard.siswa'), 'text-ink-soft' => ! request()->routeIs('dashboard.siswa')]) wire:navigate>
                     <flux:icon.home class="size-5" />
                     <span class="text-xs">Beranda</span>
@@ -49,6 +50,10 @@
                     <span class="absolute right-4 top-0 size-2 rounded-full bg-orange"></span>
                     <flux:icon.clipboard-document-check class="size-5" />
                     <span class="text-xs">Tugas</span>
+                </a>
+                <a href="{{ route('student.activities.index') }}" @class(['flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 transition', 'bg-tosca-tint font-semibold text-navy' => request()->routeIs('student.activities.*'), 'text-ink-soft' => ! request()->routeIs('student.activities.*')]) wire:navigate>
+                    <flux:icon.bell-alert class="size-5" />
+                    <span class="text-xs">Aktivitas</span>
                 </a>
                 <a href="{{ route('student.evaluation.index') }}" @class(['flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 transition', 'bg-tosca-tint font-semibold text-navy' => request()->routeIs('student.evaluation.*'), 'text-ink-soft' => ! request()->routeIs('student.evaluation.*')]) wire:navigate>
                     <flux:icon.chart-bar class="size-5" />
