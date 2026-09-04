@@ -10,7 +10,7 @@
     'mx-auto text-center' => $align === 'center',
 ]) }}>
     @if ($eyebrow)
-        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-tosca">{{ $eyebrow }}</p>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-tosca-ink">{{ $eyebrow }}</p>
     @endif
 
     <h2 class="text-2xl leading-tight sm:text-3xl">{{ $title }}</h2>

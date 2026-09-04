@@ -12,7 +12,7 @@
             x-transition
             class="flex flex-col gap-4 rounded-card border border-tosca/25 bg-tosca-tint p-5 sm:flex-row sm:items-center"
         >
-            <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-tosca text-white">
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-tosca text-navy">
                 <flux:icon.check-circle class="size-6" />
             </span>
             <div class="min-w-0 flex-1">

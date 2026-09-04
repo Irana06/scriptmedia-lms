@@ -15,7 +15,9 @@ class StudentAuthenticationTest extends TestCase
     {
         $this->get(route('siswa.login'))
             ->assertOk()
-            ->assertSee('Masuk sebagai siswa');
+            ->assertSee('RuangKelas')
+            ->assertSee('Portal siswa')
+            ->assertSee('Buka portal staf');
     }
 
     public function test_student_logs_in_with_nisn_and_must_change_initial_password(): void

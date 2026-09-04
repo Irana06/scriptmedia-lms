@@ -4,7 +4,7 @@
 
 @php
     $tones = [
-        'tosca' => 'bg-tosca text-white',
+        'tosca' => 'bg-tosca text-navy',
         'tosca-soft' => 'bg-tosca-tint text-navy-mid',
         'orange' => 'bg-orange text-navy',
         'navy' => 'bg-navy text-white',
@@ -13,7 +13,7 @@
 @endphp
 
 <span {{ $attributes->class([
-    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold leading-none',
+    'inline-flex min-h-6 items-center gap-1.5 rounded-full border border-transparent px-3 py-1 text-xs font-semibold leading-none',
     $tones[$tone] ?? $tones['tosca'],
 ]) }}>
     {{ $slot }}

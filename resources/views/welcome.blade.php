@@ -39,7 +39,7 @@
 
                 <section class="flex items-center px-6 py-10 sm:px-10 lg:px-12">
                     <div class="w-full">
-                        <p class="text-sm font-semibold text-tosca">Pilih akses</p>
+                        <p class="text-sm font-semibold text-tosca-ink">Pilih akses</p>
                         <h2 class="mt-2 text-2xl">Masuk ke akunmu</h2>
                         <p class="mt-2 text-sm leading-6 text-ink-soft">Gunakan jalur masuk yang sesuai dengan peran di sekolah.</p>
 

@@ -29,7 +29,7 @@
                         </span>
                         <span>
                             <span class="block text-lg font-semibold leading-none text-white">RuangKelas</span>
-                            <span class="mt-1 block text-[11px] uppercase tracking-[0.18em] text-white/55">ScriptMedia LMS</span>
+                            <span class="mt-1 block text-xs uppercase tracking-[0.14em] text-white/60">ScriptMedia LMS</span>
                         </span>
                     </a>
 
@@ -39,7 +39,7 @@
                 </div>
 
                 <nav class="flex-1 px-4 py-6" aria-label="Navigasi utama">
-                    <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Ruang kerja</p>
+                    <p class="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/50">Ruang kerja</p>
                     <div class="mt-3 space-y-1">
                         <a href="{{ route('dashboard') }}" @class([
                             'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
@@ -49,7 +49,7 @@
                             <flux:icon.home class="size-5" />
                             Dashboard
                         </a>
-                        <a href="{{ route('students.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white" wire:navigate>
+                        <a href="{{ route('students.index') }}" @class(['flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition', 'bg-white/12 font-semibold text-white' => request()->routeIs('students.*'), 'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('students.*')]) wire:navigate>
                             <flux:icon.users class="size-5" />
                             Kelas & Siswa
                         </a>
@@ -107,9 +107,9 @@
                         </a>
                     </div>
 
-                    <p class="mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Pengaturan</p>
+                    <p class="mt-8 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/50">Pengaturan</p>
                     <div class="mt-3 space-y-1">
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/8 hover:text-white" wire:navigate>
+                        <a href="{{ route('profile.edit') }}" @class(['flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition', 'bg-white/12 font-semibold text-white' => request()->routeIs('profile.*', 'security.*', 'appearance.*'), 'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('profile.*', 'security.*', 'appearance.*')]) wire:navigate>
                             <flux:icon.cog-6-tooth class="size-5" />
                             Profil
                         </a>
@@ -118,7 +118,7 @@
 
                 <div class="border-t border-white/10 p-4">
                     <div class="flex items-center gap-3 rounded-xl bg-white/8 p-3">
-                        <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-tosca text-sm font-semibold text-white">
+                        <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-tosca text-sm font-semibold text-navy">
                             {{ auth()->user()?->initials() ?? 'GA' }}
                         </span>
                         <div class="min-w-0 flex-1">
@@ -153,7 +153,9 @@
                 </header>
 
                 <main class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                    {{ $slot }}
+                    <div class="mx-auto w-full max-w-[1480px]">
+                        {{ $slot }}
+                    </div>
                 </main>
             </div>
         </div>

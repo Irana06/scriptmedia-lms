@@ -14,8 +14,10 @@
     --color-navy: #0b2545;
     --color-navy-mid: #14406e;
     --color-tosca: #2ca6a4;
+    --color-tosca-ink: #177876;
     --color-tosca-tint: #e3f4f3;
     --color-orange: #f4a300;
+    --color-orange-ink: #8a5700;
     --color-orange-light: #ffb347;
     --color-offwhite: #f4fafa;
     --color-ink: #0b2545;
@@ -43,9 +45,9 @@
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-navy);
+        --color-accent-content: var(--color-navy);
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -60,6 +62,7 @@
     }
 
     html {
+        color-scheme: light;
         font-family: var(--font-sans);
     }
 
@@ -67,6 +70,8 @@
         background: var(--color-offwhite);
         color: var(--color-ink);
         -webkit-font-smoothing: antialiased;
+        line-height: 1.5;
+        text-rendering: optimizeLegibility;
     }
 
     h1,
@@ -80,6 +85,26 @@
     [x-cloak] {
         display: none !important;
     }
+
+    ::selection {
+        background: rgb(44 166 164 / 28%);
+        color: var(--color-navy);
+    }
+
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-tosca);
+        outline-offset: 3px;
+    }
+}
+
+/* RuangKelas currently uses one audited, high-contrast light theme. */
+:root.dark {
+    color-scheme: light;
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
@@ -87,7 +112,115 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !text-sm !font-semibold !leading-tight !text-navy;
+}
+
+[data-flux-description] {
+    @apply !text-sm !leading-5 !text-ink-soft;
+}
+
+[data-flux-input] input,
+[data-flux-input] button {
+    min-height: 2.75rem;
+    border-color: var(--color-line);
+    border-radius: 0.75rem;
+    background-color: white;
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgb(11 37 69 / 5%);
+}
+
+[data-flux-input] input::placeholder {
+    color: rgb(60 88 120 / 58%);
+}
+
+[data-flux-button] {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    transition-duration: 160ms;
+}
+
+[data-flux-button]:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.auth-shell {
+    width: min(64rem, calc(100vw - 2rem));
+}
+
+.auth-panel,
+.auth-form,
+.auth-form form,
+.auth-form [data-flux-field],
+.auth-form [data-flux-input] {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.auth-form {
+    width: min(28rem, 100%);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([data-flux-control]),
+select:not([data-flux-control]),
+textarea:not([data-flux-control]) {
+    border-color: var(--color-line);
+    border-radius: 0.75rem;
+    background-color: white;
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgb(11 37 69 / 5%);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-form input[data-flux-control] {
+    width: 100%;
+    max-width: 100%;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([data-flux-control])::placeholder,
+textarea:not([data-flux-control])::placeholder {
+    color: rgb(60 88 120 / 58%);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([data-flux-control]):focus,
+select:not([data-flux-control]):focus,
+textarea:not([data-flux-control]):focus {
+    border-color: var(--color-tosca);
+    box-shadow: 0 0 0 3px rgb(44 166 164 / 14%);
+    outline: none;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+    accent-color: var(--color-navy);
+}
+
+input[type='file']::file-selector-button {
+    margin-inline-end: 0.75rem;
+    border: 0;
+    border-radius: 0.625rem;
+    background: var(--color-tosca-tint);
+    color: var(--color-navy);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.55rem 0.8rem;
+}
+
+table th {
+    color: var(--color-navy);
+    font-weight: 600;
+}
+
+table tbody tr {
+    transition: background-color 140ms ease;
+}
+
+table tbody tr:hover {
+    background-color: rgb(244 250 250 / 70%);
+}
+
+* {
+    scrollbar-color: rgb(60 88 120 / 35%) transparent;
+    scrollbar-width: thin;
 }
 
 input:focus[data-flux-control],
@@ -95,7 +228,3 @@ textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
-
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
