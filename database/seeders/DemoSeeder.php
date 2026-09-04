@@ -5,12 +5,15 @@ namespace Database\Seeders;
 use App\Models\AcademicYear;
 use App\Models\Announcement;
 use App\Models\Assignment;
+use App\Models\AssignmentGrade;
+use App\Models\AssignmentSubmission;
 use App\Models\Attendance;
 use App\Models\CalendarEvent;
 use App\Models\ClassSubject;
 use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\Semester;
@@ -139,6 +142,10 @@ class DemoSeeder extends Seeder
             ['class_subject_id' => $science->id, 'title' => 'Observasi Lingkungan Sekolah'],
             ['description' => 'Catat lima jenis makhluk hidup yang ditemukan di lingkungan sekolah.', 'deadline' => now()->addDays(10)],
         );
+        $completedAssignment = Assignment::query()->updateOrCreate(
+            ['class_subject_id' => $math->id, 'title' => 'Ringkasan Materi Persamaan Linear'],
+            ['description' => 'Buat ringkasan satu halaman beserta satu contoh soal dan pembahasannya.', 'deadline' => now()->subDays(2)],
+        );
 
         $quiz = Quiz::query()->updateOrCreate(
             ['class_subject_id' => $math->id, 'title' => 'Kuis Persamaan Linear'],
@@ -151,6 +158,35 @@ class DemoSeeder extends Seeder
         foreach ([['2', false], ['3', true], ['4', false], ['5', false]] as [$label, $isCorrect]) {
             $question->choices()->updateOrCreate(['label' => $label], ['is_correct' => $isCorrect]);
         }
+
+        $demoStudent = $students->firstOrFail();
+        $answerPath = 'learning/demo/jawaban-budi-persamaan-linear.pdf';
+        Storage::disk('local')->put($answerPath, Pdf::loadHTML(<<<'HTML'
+            <html><body style="font-family: DejaVu Sans, sans-serif; color: #0b2545; padding: 28px;">
+                <h1>Jawaban Ringkasan Persamaan Linear</h1>
+                <p><strong>Nama:</strong> Budi Santoso</p>
+                <p>Persamaan linear satu variabel memiliki bentuk umum ax + b = c.</p>
+                <p><strong>Contoh:</strong> 3x + 5 = 20, sehingga 3x = 15 dan x = 5.</p>
+            </body></html>
+            HTML)->setPaper('a4')->output());
+        $submission = AssignmentSubmission::query()->updateOrCreate(
+            ['assignment_id' => $completedAssignment->id, 'student_id' => $demoStudent->id],
+            ['file_path' => $answerPath, 'submitted_at' => now()->subDays(3)],
+        );
+        AssignmentGrade::query()->updateOrCreate(
+            ['submission_id' => $submission->id],
+            ['score' => 92, 'feedback' => 'Ringkasan sudah runtut dan contoh soal benar. Pertahankan cara penulisan langkah penyelesaiannya.'],
+        );
+
+        $attempt = QuizAttempt::query()->updateOrCreate(
+            ['quiz_id' => $quiz->id, 'student_id' => $demoStudent->id],
+            ['started_at' => now()->subMinutes(12), 'submitted_at' => now()->subMinutes(5), 'score' => 100],
+        );
+        $correctChoice = $question->choices()->where('is_correct', true)->firstOrFail();
+        $attempt->answers()->updateOrCreate(
+            ['question_id' => $question->id],
+            ['answer' => (string) $correctChoice->id, 'score' => 1],
+        );
 
         foreach ($students as $index => $student) {
             foreach ([[$math, 88 - $index], [$science, 90 - $index]] as [$classSubject, $score]) {

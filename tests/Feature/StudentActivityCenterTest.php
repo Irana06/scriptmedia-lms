@@ -4,10 +4,14 @@ namespace Tests\Feature;
 
 use App\Livewire\Student\ActivityCenter;
 use App\Models\AcademicYear;
+use App\Models\Announcement;
 use App\Models\Assignment;
+use App\Models\AssignmentGrade;
 use App\Models\AssignmentSubmission;
+use App\Models\CalendarEvent;
 use App\Models\ClassSubject;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
@@ -48,11 +52,16 @@ class StudentActivityCenterTest extends TestCase
             'title' => 'Tugas sudah dikirim',
             'deadline' => now()->addDay(),
         ]);
-        AssignmentSubmission::query()->create([
+        $submission = AssignmentSubmission::query()->create([
             'assignment_id' => $submitted->id,
             'student_id' => $student->id,
             'file_path' => 'testing/jawaban.pdf',
             'submitted_at' => now(),
+        ]);
+        AssignmentGrade::query()->create([
+            'submission_id' => $submission->id,
+            'score' => 92,
+            'feedback' => 'Pembahasan sudah runtut dan benar.',
         ]);
         Quiz::query()->create([
             'class_subject_id' => $classSubject->id,
@@ -60,6 +69,30 @@ class StudentActivityCenterTest extends TestCase
             'duration_minutes' => 20,
             'open_at' => now()->subHour(),
             'close_at' => now()->addDay(),
+        ]);
+        $quiz = Quiz::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => 'Kuis yang sudah selesai',
+            'duration_minutes' => 20,
+            'open_at' => now()->subDays(2),
+            'close_at' => now()->addDay(),
+        ]);
+        $question = $quiz->questions()->create([
+            'type' => 'mc',
+            'question' => 'Nilai x dari x + 2 = 5 adalah ...',
+        ]);
+        $choice = $question->choices()->create(['label' => '3', 'is_correct' => true]);
+        $attempt = QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'student_id' => $student->id,
+            'started_at' => now()->subMinutes(8),
+            'submitted_at' => now(),
+            'score' => 100,
+        ]);
+        $attempt->answers()->create([
+            'question_id' => $question->id,
+            'answer' => (string) $choice->id,
+            'score' => 1,
         ]);
 
         $otherClass = SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7B']);
@@ -84,7 +117,49 @@ class StudentActivityCenterTest extends TestCase
             ->assertDontSee('Tugas sudah dikirim')
             ->assertDontSee('Rahasia kelas lain')
             ->set('tab', 'history')
-            ->assertSee('Tugas sudah dikirim');
+            ->assertSee('Tugas sudah dikirim')
+            ->assertSee('Ketepatan waktu')
+            ->assertSee('Umpan balik guru')
+            ->assertSee('Pembahasan sudah runtut dan benar.')
+            ->assertSee('Kuis yang sudah selesai')
+            ->assertSee('Terjawab')
+            ->assertSee('Jawabanmu:')
+            ->assertSee('Nilai 100');
+    }
+
+    public function test_information_details_come_from_announcements_and_calendar_events(): void
+    {
+        $student = User::factory()->student(mustChangePassword: false)->create();
+        $admin = User::factory()->admin()->create(['name' => 'Admin Sekolah']);
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        $class = SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+        $class->students()->attach($student);
+
+        Announcement::query()->create([
+            'title' => 'Jadwal pembagian rapor',
+            'body' => 'Rapor dibagikan di ruang kelas masing-masing.',
+            'target' => 'all',
+            'created_by' => $admin->id,
+        ]);
+        CalendarEvent::query()->create([
+            'title' => 'Pertemuan wali kelas',
+            'date' => now()->addWeek()->toDateString(),
+            'description' => 'Pertemuan dimulai pukul 09.00 di aula.',
+            'created_by' => $admin->id,
+        ]);
+
+        $this->actingAs($student);
+
+        Livewire::test(ActivityCenter::class)
+            ->set('tab', 'info')
+            ->assertSee('Jadwal pembagian rapor')
+            ->assertSee('Diterbitkan oleh')
+            ->assertSee('Admin Sekolah')
+            ->assertSee('Ditujukan kepada')
+            ->assertSee('Seluruh warga sekolah')
+            ->assertSee('Pertemuan wali kelas')
+            ->assertSee('Tanggal pelaksanaan')
+            ->assertSee('Dibuat oleh');
     }
 
     public function test_activity_center_is_available_to_students_only(): void

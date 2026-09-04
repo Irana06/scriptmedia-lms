@@ -59,7 +59,7 @@ class ActivityCenter extends Component
             ->get();
 
         $submissions = AssignmentSubmission::query()
-            ->with('assignment.classSubject.subject', 'grade')
+            ->with('assignment.classSubject.subject', 'assignment.classSubject.teacher', 'grade')
             ->where('student_id', $studentId)
             ->whereHas('assignment', $assignmentScope)
             ->latest('submitted_at')
@@ -67,7 +67,7 @@ class ActivityCenter extends Component
             ->get();
 
         $quizAttempts = QuizAttempt::query()
-            ->with('quiz.classSubject.subject')
+            ->with('quiz.classSubject.subject', 'quiz.classSubject.teacher', 'quiz.questions.choices', 'answers.question.choices')
             ->where('student_id', $studentId)
             ->whereNotNull('submitted_at')
             ->whereHas('quiz.classSubject', fn (Builder $query): Builder => $query->whereIn('class_id', $classIds))
@@ -94,7 +94,7 @@ class ActivityCenter extends Component
             'submissions' => $submissions,
             'quizAttempts' => $quizAttempts,
             'announcements' => $this->announcements($classIds)->latest()->limit(20)->get(),
-            'events' => CalendarEvent::query()->whereDate('date', '>=', today())->orderBy('date')->limit(10)->get(),
+            'events' => CalendarEvent::query()->with('creator')->whereDate('date', '>=', today())->orderBy('date')->limit(10)->get(),
             'todoCount' => $pendingAssignments->count() + $overdueAssignments->count() + $activeQuizzes->count(),
             'completedActivities' => $completedActivities,
             'totalActivities' => $totalActivities,
