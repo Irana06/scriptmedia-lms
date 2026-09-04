@@ -64,6 +64,19 @@ class StudentAuthenticationTest extends TestCase
         ])->assertRedirect(route('dashboard.siswa', absolute: false));
     }
 
+    public function test_student_can_log_in_when_remember_checkbox_posts_an_empty_value(): void
+    {
+        $student = User::factory()->student(mustChangePassword: false)->create();
+
+        $this->post(route('siswa.login.store'), [
+            'username' => $student->username,
+            'password' => 'password',
+            'remember' => '',
+        ])->assertRedirect(route('dashboard.siswa', absolute: false));
+
+        $this->assertAuthenticatedAs($student);
+    }
+
     public function test_staff_cannot_use_student_login(): void
     {
         $teacher = User::factory()->teacher()->create(['username' => '1234567890']);

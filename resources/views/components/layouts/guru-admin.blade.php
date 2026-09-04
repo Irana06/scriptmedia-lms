@@ -145,10 +145,10 @@
                         <p class="text-sm font-semibold text-navy">Tahun Ajaran 2026/2027</p>
                     </div>
                     <div class="ml-auto flex items-center gap-2">
-                        <button type="button" class="relative rounded-xl border border-line bg-white p-2.5 text-ink-soft transition hover:text-navy" aria-label="Notifikasi">
+                        <a href="{{ route('communications.index') }}" class="relative rounded-xl border border-line bg-white p-2.5 text-ink-soft shadow-sm transition hover:border-tosca hover:text-navy" aria-label="Buka pengumuman dan kalender" wire:navigate>
                             <flux:icon.bell class="size-5" />
                             <span class="absolute right-2 top-2 size-2 rounded-full bg-orange ring-2 ring-white"></span>
-                        </button>
+                        </a>
                     </div>
                 </header>
 

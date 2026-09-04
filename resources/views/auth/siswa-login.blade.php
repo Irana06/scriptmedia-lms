@@ -26,6 +26,9 @@
                 autocomplete="username"
                 placeholder="Contoh: 0012345678"
             />
+            @error('username')
+                <p class="-mt-3 text-sm font-medium text-red-600" role="alert">{{ $message }}</p>
+            @enderror
 
             <flux:input
                 name="password"
@@ -36,6 +39,9 @@
                 placeholder="Password"
                 viewable
             />
+            @error('password')
+                <p class="-mt-3 text-sm font-medium text-red-600" role="alert">{{ $message }}</p>
+            @enderror
 
             <flux:checkbox name="remember" label="Ingat saya" :checked="old('remember')" />
 

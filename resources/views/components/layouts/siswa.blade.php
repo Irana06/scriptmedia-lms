@@ -24,10 +24,6 @@
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
-                    <button type="button" class="relative rounded-xl p-2.5 text-ink-soft hover:bg-offwhite hover:text-navy" aria-label="Notifikasi">
-                        <flux:icon.bell class="size-5" />
-                        <span class="absolute right-2 top-2 size-2 rounded-full bg-orange ring-2 ring-white"></span>
-                    </button>
                     <a href="{{ route('profile.edit') }}" class="flex size-9 items-center justify-center rounded-full bg-tosca text-xs font-semibold text-navy" aria-label="Buka profil" wire:navigate>
                         {{ auth()->user()?->initials() ?? 'SN' }}
                     </a>

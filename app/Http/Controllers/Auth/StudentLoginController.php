@@ -23,7 +23,6 @@ class StudentLoginController extends Controller
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
-            'remember' => ['sometimes', 'boolean'],
         ]);
 
         $student = User::query()
@@ -36,7 +35,7 @@ class StudentLoginController extends Controller
             ]);
         }
 
-        Auth::login($student, (bool) ($credentials['remember'] ?? false));
+        Auth::login($student, $request->boolean('remember'));
         $request->session()->regenerate();
 
         return redirect()->intended(route(
