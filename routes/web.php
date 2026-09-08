@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\ReportCardController;
+use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\RequiredPasswordController;
 use App\Http\Controllers\Auth\StudentLoginController;
 use App\Http\Controllers\DashboardRedirectController;
@@ -24,6 +25,10 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware('guest')->group(function () {
+    Route::post('demo/login/{role}', DemoLoginController::class)
+        ->middleware('throttle:10,1')
+        ->whereIn('role', ['admin', 'guru', 'siswa'])
+        ->name('demo.login');
     Route::get('siswa/login', [StudentLoginController::class, 'create'])->name('siswa.login');
     Route::post('siswa/login', [StudentLoginController::class, 'store'])
         ->middleware('throttle:student-login')

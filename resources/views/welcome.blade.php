@@ -64,6 +64,24 @@
                             @endauth
                         </div>
 
+                        @if(config('app.demo_mode') && ! auth()->check())
+                            <div class="mt-6 rounded-2xl border border-tosca/25 bg-tosca-tint/45 p-4">
+                                <div class="flex items-start gap-3">
+                                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-tosca text-white"><flux:icon.beaker class="size-5" /></span>
+                                    <div><p class="font-semibold text-navy">Coba akun demo</p><p class="mt-1 text-xs leading-5 text-ink-soft">Untuk preview saja — pilih peran untuk masuk tanpa mengetik kredensial.</p></div>
+                                </div>
+                                <div class="mt-4 grid gap-2 sm:grid-cols-3">
+                                    @foreach ([['admin', 'Admin', 'shield-check'], ['guru', 'Guru', 'academic-cap'], ['siswa', 'Siswa', 'user']] as [$role, $label, $icon])
+                                        <form method="POST" action="{{ route('demo.login', $role) }}">
+                                            @csrf
+                                            <button type="submit" class="group flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-navy transition hover:-translate-y-px hover:border-tosca hover:text-tosca-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tosca focus-visible:ring-offset-2"><flux:icon :name="$icon" class="size-4 text-tosca" />Masuk {{ $label }}<flux:icon.arrow-right class="size-4 transition group-hover:translate-x-0.5" /></button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                                <p class="mt-3 text-xs text-ink-soft">Data akun dibuat oleh <code class="rounded bg-white px-1.5 py-0.5 text-navy">DemoSeeder</code>.</p>
+                            </div>
+                        @endif
+
                         <p class="mt-8 text-sm leading-6 text-ink-soft">Siswa tidak dapat mendaftar sendiri. Hubungi admin sekolah jika belum menerima akun atau memerlukan reset password.</p>
                     </div>
                 </section>
