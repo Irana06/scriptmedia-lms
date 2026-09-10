@@ -28,6 +28,12 @@
                     <a href="{{ route('profile.edit') }}" class="flex size-9 items-center justify-center rounded-full bg-tosca text-xs font-semibold text-navy" aria-label="Buka profil" wire:navigate>
                         {{ auth()->user()?->initials() ?? 'SN' }}
                     </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex size-9 items-center justify-center rounded-full border border-line text-ink-soft transition hover:border-orange hover:text-orange-ink" aria-label="Keluar" data-test="logout-button">
+                            <flux:icon.arrow-right-start-on-rectangle class="size-5" />
+                        </button>
+                    </form>
                 </div>
             </div>
         </header>

@@ -1,7 +1,7 @@
 {
-  "_fonts-B7CYWPbf.css": {
-    "file": "assets/fonts-B7CYWPbf.css",
-    "src": "_fonts-B7CYWPbf.css"
+  "_fonts-6xx-AB9b.css": {
+    "file": "assets/fonts-6xx-AB9b.css",
+    "src": "_fonts-6xx-AB9b.css"
   },
   "_questrial-400-normal-BcF-iMQl.woff": {
     "file": "assets/questrial-400-normal-BcF-iMQl.woff",
@@ -12,7 +12,7 @@
     "src": "_questrial-400-normal-DNhQdR1R.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DYLDFkMG.css",
+    "file": "assets/app-DecHhpLM.css",
     "name": "app",
     "names": [
       "app.css"

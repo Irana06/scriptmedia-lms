@@ -14,15 +14,22 @@ class AccountImportTemplateExport implements FromArray, ShouldAutoSize, WithHead
     public function array(): array
     {
         return $this->type === 'siswa'
-            ? [['Budi Santoso', '0012345678', '3273010101010001', 'L', '7A']]
-            : [['Siti Aminah', 'siti.aminah@sekolah.sch.id', '198701012010012001']];
+            ? [
+                ['Budi Santoso', '0012345678', '2024001', '3273010101010001', 'L', '7A'],
+                ['Siti Aisyah', '', '2024002', '', 'P', '7A'],
+            ]
+            : [
+                ['Siti Aminah', 'siti.aminah@sekolah.sch.id', '198701012010012001', '1234567890123456'],
+                ['Ahmad Fauzi', 'ahmad.fauzi@sekolah.sch.id', '', '6543210987654321'],
+                ['Rina Lestari', 'rina.lestari@sekolah.sch.id', '', ''],
+            ];
     }
 
     /** @return list<string> */
     public function headings(): array
     {
         return $this->type === 'siswa'
-            ? ['nama', 'nisn', 'nik', 'jenis_kelamin', 'kelas/rombel']
-            : ['nama', 'email', 'nip'];
+            ? ['nama', 'nisn', 'nis', 'nik', 'jenis_kelamin', 'kelas']
+            : ['nama', 'email', 'nip', 'nuptk'];
     }
 }

@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
+        "build:subfolder": "vite build --base=/lms/build/",
         "dev": "vite"
     },
     "dependencies": {

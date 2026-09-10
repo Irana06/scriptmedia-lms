@@ -10,6 +10,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\Attendance;
 use App\Models\CalendarEvent;
 use App\Models\ClassSubject;
+use App\Models\DataImport;
 use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Quiz;
@@ -21,6 +22,7 @@ use App\Models\Subject;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class DemoSeeder extends Seeder
@@ -222,6 +224,179 @@ class DemoSeeder extends Seeder
         CalendarEvent::query()->updateOrCreate(
             ['title' => '[Demo] Evaluasi tengah semester'],
             ['date' => now()->addDays(14)->toDateString(), 'description' => 'Agenda contoh untuk pengujian kalender.', 'created_by' => $admin->id],
+        );
+
+        $this->seedSecondClass($admin, $year, $semester, $class);
+        $this->seedAttendanceHistory($semester);
+        $this->seedImportHistory($admin);
+    }
+
+    /**
+     * Satu kelas berisi tiga siswa tidak memperlihatkan apa pun soal skala.
+     * Kelas kedua memberi guru sesuatu untuk dipindah-pindah saat demo, dan
+     * memberi admin struktur akademik yang terlihat seperti sekolah sungguhan.
+     */
+    private function seedSecondClass(User $admin, AcademicYear $year, Semester $semester, SchoolClass $firstClass): void
+    {
+        $teachers = collect([
+            ['name' => 'Pak Hendra Demo', 'email' => 'hendra.demo@example.com', 'nip' => '198203152008011003'],
+            ['name' => 'Bu Yuli Demo', 'email' => 'yuli.demo@example.com', 'nuptk' => '7845762663300012'],
+            ['name' => 'Pak Iwan Demo', 'email' => 'iwan.demo@example.com'],
+        ])->map(fn (array $item): User => $this->user(
+            email: $item['email'],
+            name: $item['name'],
+            role: 'guru',
+            extra: array_filter([
+                'nip' => $item['nip'] ?? null,
+                'nuptk' => $item['nuptk'] ?? null,
+            ]),
+        ));
+
+        $secondClass = SchoolClass::query()->updateOrCreate(
+            ['academic_year_id' => $year->id, 'name' => '7B Demo'],
+            ['homeroom_teacher_id' => $teachers[0]->id],
+        );
+
+        // NISN demo melanjutkan urutan tiga siswa pertama agar tidak bentrok.
+        $names = [
+            'Dewi Anggraini', 'Rizky Ramadhan', 'Putri Maharani', 'Fajar Nugroho',
+            'Intan Permata', 'Bayu Setiawan', 'Nabila Zahra', 'Dimas Prasetyo',
+            'Salsabila Putri', 'Yoga Pratama', 'Citra Lestari', 'Arif Wibowo',
+            'Melati Kusuma', 'Reza Alfarizi', 'Anisa Rahmawati', 'Galih Saputra',
+            'Tiara Amelia',
+        ];
+
+        $newStudents = collect($names)->values()->map(function (string $name, int $index): User {
+            $nisn = str_pad((string) (99000004 + $index), 10, '0', STR_PAD_LEFT);
+
+            return $this->user(
+                email: $nisn.'@students.invalid',
+                name: $name,
+                role: 'siswa',
+                extra: [
+                    'username' => $nisn,
+                    'nisn' => $nisn,
+                    'gender' => $index % 2 === 0 ? 'P' : 'L',
+                    'must_change_password' => false,
+                ],
+            );
+        });
+
+        // Sebagian masuk 7A agar kelas pertama tidak lagi hanya berisi tiga siswa.
+        $firstClass->students()->syncWithoutDetaching($newStudents->take(7)->pluck('id'));
+        $secondClass->students()->syncWithoutDetaching($newStudents->skip(7)->pluck('id'));
+
+        $catalogue = [
+            ['name' => 'Bahasa Indonesia Demo', 'code' => 'BIN-DEMO', 'teacher' => 0, 'day' => 'Selasa', 'start' => '07:00', 'end' => '08:30'],
+            ['name' => 'IPS Demo', 'code' => 'IPS-DEMO', 'teacher' => 1, 'day' => 'Kamis', 'start' => '09:00', 'end' => '10:30'],
+            ['name' => 'Bahasa Inggris Demo', 'code' => 'BIG-DEMO', 'teacher' => 2, 'day' => 'Jumat', 'start' => '07:30', 'end' => '09:00'],
+        ];
+
+        foreach ([$firstClass, $secondClass] as $offset => $target) {
+            foreach ($catalogue as $item) {
+                $subject = Subject::query()->updateOrCreate(
+                    ['code' => $item['code']],
+                    ['name' => $item['name']],
+                );
+                $classSubject = ClassSubject::query()->updateOrCreate(
+                    ['class_id' => $target->id, 'subject_id' => $subject->id],
+                    ['teacher_id' => $teachers[$item['teacher']]->id],
+                );
+
+                // Kelas kedua digeser satu jam supaya guru yang sama tidak bentrok.
+                $start = Carbon::createFromFormat('H:i', $item['start'])->addHours($offset * 3);
+                $end = Carbon::createFromFormat('H:i', $item['end'])->addHours($offset * 3);
+
+                Schedule::query()->updateOrCreate(
+                    ['class_subject_id' => $classSubject->id, 'day' => $item['day'], 'start_time' => $start->format('H:i:s')],
+                    ['end_time' => $end->format('H:i:s')],
+                );
+
+                Material::query()->updateOrCreate(
+                    ['class_subject_id' => $classSubject->id, 'title' => 'Pengantar '.$item['name']],
+                    ['description' => 'Materi pembuka yang dipakai untuk menguji tampilan daftar materi.', 'order' => 1],
+                );
+                Assignment::query()->updateOrCreate(
+                    ['class_subject_id' => $classSubject->id, 'title' => 'Tugas Pekan Pertama'],
+                    ['description' => 'Kerjakan latihan pada buku halaman pertama bab ini.', 'deadline' => now()->addDays(5 + $offset)],
+                );
+
+                foreach ($target->students as $position => $student) {
+                    $score = 72 + (($student->id + $position) % 23);
+
+                    Grade::query()->updateOrCreate(
+                        ['student_id' => $student->id, 'class_subject_id' => $classSubject->id, 'semester_id' => $semester->id],
+                        ['final_score' => $score, 'predikat' => match (true) {
+                            $score >= 90 => 'A',
+                            $score >= 80 => 'B',
+                            default => 'C',
+                        }],
+                    );
+                }
+            }
+        }
+
+        Announcement::query()->updateOrCreate(
+            ['title' => '[Demo] Pembagian wali kelas 7B'],
+            [
+                'body' => 'Kelas 7B diampu oleh Pak Hendra sebagai wali kelas. Silakan hubungi beliau untuk urusan administrasi kelas.',
+                'target' => 'class',
+                'class_id' => $secondClass->id,
+                'created_by' => $admin->id,
+            ],
+        );
+    }
+
+    /**
+     * Presensi satu hari membuat halaman rekap terlihat kosong. Riwayat dua
+     * pekan dengan variasi izin, sakit, dan alpa memperlihatkan gunanya rekap.
+     */
+    private function seedAttendanceHistory(Semester $semester): void
+    {
+        $classes = SchoolClass::query()->with('students')->where('academic_year_id', $semester->academic_year_id)->get();
+        $statuses = ['hadir', 'hadir', 'hadir', 'hadir', 'hadir', 'hadir', 'izin', 'sakit', 'hadir', 'alpa'];
+
+        foreach ($classes as $class) {
+            foreach ($class->students as $student) {
+                $date = now()->startOfDay();
+
+                for ($day = 0; $day < 14; $day++) {
+                    $date = $date->copy()->subDay();
+
+                    if ($date->isWeekend()) {
+                        continue;
+                    }
+
+                    Attendance::query()->updateOrCreate(
+                        ['class_id' => $class->id, 'student_id' => $student->id, 'date' => $date->toDateString()],
+                        ['status' => $statuses[($student->id + $day) % count($statuses)]],
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Riwayat impor yang sudah selesai supaya alur admin bisa didemokan tanpa
+     * harus benar-benar mengunggah berkas di depan calon pengguna.
+     */
+    private function seedImportHistory(User $admin): void
+    {
+        DataImport::query()->updateOrCreate(
+            ['file_path' => 'imports/demo/impor-siswa-awal-tahun.xlsx'],
+            [
+                'type' => 'siswa',
+                'imported_by' => $admin->id,
+                'total_rows' => 22,
+                'success_count' => 20,
+                'failed_count' => 2,
+                'status' => 'done',
+                'failures' => [
+                    ['row' => 9, 'message' => 'NISN atau NIS harus diisi.'],
+                    ['row' => 17, 'message' => 'Kelas 7C tidak ditemukan pada tahun ajaran aktif.'],
+                ],
+                'downloaded_at' => now()->subDays(3),
+            ],
         );
     }
 

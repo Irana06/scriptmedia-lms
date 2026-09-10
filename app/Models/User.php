@@ -25,9 +25,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $email
  * @property string|null $username
  * @property string|null $nisn
+ * @property string|null $nis
  * @property string|null $nik
  * @property string|null $gender
  * @property string|null $nip
+ * @property string|null $nuptk
  * @property bool $must_change_password
  * @property Carbon|null $email_verified_at
  * @property string $password
@@ -38,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'username', 'nisn', 'nik', 'gender', 'nip', 'password', 'must_change_password'])]
+#[Fillable(['name', 'email', 'username', 'nisn', 'nis', 'nik', 'gender', 'nip', 'nuptk', 'password', 'must_change_password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {

@@ -84,20 +84,29 @@ class AccountImportService
     private function importStudent(array $row): array
     {
         $values = [
-            'name' => $this->text($row['nama'] ?? null),
-            'nisn' => $this->text($row['nisn'] ?? null),
-            'nik' => $this->text($row['nik'] ?? null),
-            'gender' => $this->normalizeGender($row['jenis_kelamin'] ?? null),
-            'class' => $this->text($row['kelasrombel'] ?? $row['kelas_rombel'] ?? null),
+            'name' => $this->pick($row, 'nama', 'nama_lengkap', 'nama_siswa', 'nama_peserta_didik'),
+            'nisn' => $this->pick($row, 'nisn'),
+            'nis' => $this->pick($row, 'nis', 'no_induk', 'nomor_induk', 'no_induk_siswa'),
+            'nik' => $this->pick($row, 'nik', 'nik_siswa', 'no_ktp'),
+            'gender' => $this->normalizeGender($this->pick($row, 'jenis_kelamin', 'jk', 'gender', 'lp')),
+            'class' => $this->pick($row, 'kelasrombel', 'kelas_rombel', 'kelas', 'rombel', 'nama_rombel', 'rombongan_belajar'),
         ];
 
         Validator::make($values, [
             'name' => ['required', 'string', 'max:255'],
-            'nisn' => ['required', 'digits:10'],
-            'nik' => ['required', 'digits:16'],
+            // NISN terbit lewat Dapodik dan sering belum ada untuk siswa baru,
+            // jadi nomor induk sekolah boleh menggantikannya sebagai identitas masuk.
+            'nisn' => ['nullable', 'required_without:nis', 'digits:10'],
+            'nis' => ['nullable', 'required_without:nisn', 'string', 'max:30'],
+            'nik' => ['nullable', 'digits:16'],
             'gender' => ['required', Rule::in(['L', 'P'])],
             'class' => ['required', 'string', 'max:30'],
+        ], [
+            'nisn.required_without' => 'NISN atau NIS harus diisi.',
+            'nis.required_without' => 'NISN atau NIS harus diisi.',
         ])->validate();
+
+        $login = $values['nisn'] !== '' ? $values['nisn'] : $values['nis'];
 
         $activeYear = AcademicYear::query()->where('is_active', true)->first();
 
@@ -114,17 +123,18 @@ class AccountImportService
             throw new RuntimeException("Kelas {$values['class']} tidak ditemukan pada tahun ajaran aktif.");
         }
 
-        return DB::transaction(function () use ($values, $activeYear, $schoolClass): array {
+        return DB::transaction(function () use ($values, $login, $activeYear, $schoolClass): array {
             $user = User::query()
-                ->where('nisn', $values['nisn'])
-                ->orWhere('username', $values['nisn'])
+                ->where(function ($query) use ($login): void {
+                    $query->where('username', $login)->orWhere('nisn', $login)->orWhere('nis', $login);
+                })
                 ->first();
 
             if ($user && $user->roles()->exists() && ! $user->hasRole('siswa')) {
-                throw new RuntimeException('NISN/username sudah digunakan akun non-siswa.');
+                throw new RuntimeException('NISN/NIS sudah digunakan akun non-siswa.');
             }
 
-            $email = $values['nisn'].'@students.invalid';
+            $email = $login.'@students.invalid';
             $emailOwner = User::query()->where('email', $email)->when($user, fn ($query) => $query->whereKeyNot($user->id))->exists();
 
             if ($emailOwner) {
@@ -136,9 +146,10 @@ class AccountImportService
             $user->fill([
                 'name' => $values['name'],
                 'email' => $email,
-                'username' => $values['nisn'],
-                'nisn' => $values['nisn'],
-                'nik' => $values['nik'],
+                'username' => $login,
+                'nisn' => $values['nisn'] !== '' ? $values['nisn'] : null,
+                'nis' => $values['nis'] !== '' ? $values['nis'] : null,
+                'nik' => $values['nik'] !== '' ? $values['nik'] : null,
                 'gender' => $values['gender'],
                 'password' => $password,
                 'must_change_password' => true,
@@ -162,15 +173,19 @@ class AccountImportService
     private function importTeacher(array $row): array
     {
         $values = [
-            'name' => $this->text($row['nama'] ?? null),
-            'email' => Str::lower($this->text($row['email'] ?? null)),
-            'nip' => $this->text($row['nip'] ?? null),
+            'name' => $this->pick($row, 'nama', 'nama_lengkap', 'nama_guru', 'nama_ptk'),
+            'email' => Str::lower($this->pick($row, 'email', 'surel', 'alamat_email')),
+            'nip' => $this->pick($row, 'nip'),
+            'nuptk' => $this->pick($row, 'nuptk'),
         ];
 
         Validator::make($values, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email:rfc', 'max:255'],
-            'nip' => ['required', 'string', 'max:30'],
+            // NIP hanya dimiliki ASN. Guru yayasan dan honorer di sekolah swasta
+            // umumnya hanya punya NUPTK, atau belum punya keduanya.
+            'nip' => ['nullable', 'string', 'max:30'],
+            'nuptk' => ['nullable', 'string', 'max:30'],
         ])->validate();
 
         return DB::transaction(function () use ($values): array {
@@ -180,10 +195,19 @@ class AccountImportService
                 throw new RuntimeException('Email sudah digunakan akun non-guru.');
             }
 
-            $nipUsed = User::query()->where('nip', $values['nip'])->when($user, fn ($query) => $query->whereKeyNot($user->id))->exists();
+            foreach (['nip' => 'NIP', 'nuptk' => 'NUPTK'] as $field => $label) {
+                if ($values[$field] === '') {
+                    continue;
+                }
 
-            if ($nipUsed) {
-                throw new RuntimeException('NIP sudah digunakan guru lain.');
+                $used = User::query()
+                    ->where($field, $values[$field])
+                    ->when($user, fn ($query) => $query->whereKeyNot($user->id))
+                    ->exists();
+
+                if ($used) {
+                    throw new RuntimeException("{$label} sudah digunakan guru lain.");
+                }
             }
 
             $password = $this->password();
@@ -191,7 +215,8 @@ class AccountImportService
             $user->fill([
                 'name' => $values['name'],
                 'email' => $values['email'],
-                'nip' => $values['nip'],
+                'nip' => $values['nip'] !== '' ? $values['nip'] : null,
+                'nuptk' => $values['nuptk'] !== '' ? $values['nuptk'] : null,
                 'password' => $password,
                 'must_change_password' => true,
             ]);
@@ -206,9 +231,34 @@ class AccountImportService
     /** @param array<string, mixed> $row */
     private function uniqueKey(string $type, array $row): string
     {
-        $value = $type === 'siswa' ? ($row['nisn'] ?? null) : ($row['email'] ?? null);
+        $value = $type === 'siswa'
+            ? $this->pick($row, 'nisn') ?: $this->pick($row, 'nis', 'no_induk', 'nomor_induk', 'no_induk_siswa')
+            : $this->pick($row, 'email', 'surel', 'alamat_email');
 
-        return $type.':'.Str::lower($this->text($value));
+        return $type.':'.Str::lower($value);
+    }
+
+    /**
+     * Ambil nilai kolom pertama yang terisi.
+     *
+     * Ekspor Dapodik dan EMIS memakai nama kolom yang berbeda-beda, dan
+     * operator sekolah jarang merapikannya sebelum mengunggah. Menerima
+     * beberapa nama untuk kolom yang sama jauh lebih murah daripada meminta
+     * setiap sekolah menyesuaikan berkasnya dengan template kita.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private function pick(array $row, string ...$aliases): string
+    {
+        foreach ($aliases as $alias) {
+            $value = $this->text($row[$alias] ?? null);
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     private function text(mixed $value): string

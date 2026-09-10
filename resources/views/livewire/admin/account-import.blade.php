@@ -123,6 +123,15 @@
                     <li class="flex gap-3"><span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white">2</span><span>Pastikan kelas siswa sudah tersedia pada tahun ajaran aktif.</span></li>
                     <li class="flex gap-3"><span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white">3</span><span>Unduh kartu akun setelah proses selesai. File hanya tersedia satu kali.</span></li>
                 </ol>
+
+                <div class="mt-5 border-t border-line pt-4">
+                    <p class="text-sm font-semibold text-navy">Kolom yang boleh kosong</p>
+                    <ul class="mt-2 space-y-1.5 text-xs leading-5 text-ink-soft">
+                        <li><strong class="text-navy">Siswa</strong> — isi NISN <em>atau</em> NIS, tidak harus keduanya. Siswa baru yang NISN-nya belum terbit tetap bisa dibuatkan akun memakai nomor induk sekolah. NIK boleh dikosongkan.</li>
+                        <li><strong class="text-navy">Guru</strong> — NIP dan NUPTK keduanya opsional. Guru yayasan dan honorer umumnya tidak memiliki NIP.</li>
+                    </ul>
+                    <p class="mt-3 text-xs leading-5 text-ink-soft">Berkas hasil ekspor Dapodik atau EMIS bisa langsung diunggah tanpa mengganti nama kolomnya.</p>
+                </div>
             </x-theme.card>
 
             <div class="rounded-card border border-orange/35 bg-orange/10 p-5">

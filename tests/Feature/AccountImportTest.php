@@ -112,6 +112,142 @@ class AccountImportTest extends TestCase
         $this->assertTrue($teacher->must_change_password);
     }
 
+    /** @param list<string> $headings */
+    private function spreadsheet(array $headings, array $rows): string
+    {
+        return Excel::raw(new class($headings, $rows) implements FromArray, WithHeadings
+        {
+            public function __construct(private array $headings, private array $rows) {}
+
+            public function headings(): array
+            {
+                return $this->headings;
+            }
+
+            public function array(): array
+            {
+                return $this->rows;
+            }
+        }, ExcelWriter::XLSX);
+    }
+
+    private function runImport(string $type, string $contents): DataImport
+    {
+        Livewire::test(AccountImport::class)
+            ->set('type', $type)
+            ->set('file', UploadedFile::fake()->createWithContent("{$type}.xlsx", $contents))
+            ->call('import')
+            ->assertHasNoErrors();
+
+        return DataImport::query()->latest('id')->firstOrFail();
+    }
+
+    public function test_student_without_nisn_can_be_imported_using_school_number(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('siswa', $this->spreadsheet(
+            ['nama', 'nisn', 'nis', 'nik', 'jenis_kelamin', 'kelas'],
+            [['Siswa Baru', '', '2024001', '', 'L', '7A']],
+        ));
+
+        $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
+
+        $student = User::query()->where('nis', '2024001')->firstOrFail();
+
+        $this->assertNull($student->nisn);
+        $this->assertNull($student->nik);
+        $this->assertSame('2024001', $student->username);
+        $this->assertTrue($student->hasRole('siswa'));
+    }
+
+    public function test_student_row_without_any_identifier_is_rejected(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('siswa', $this->spreadsheet(
+            ['nama', 'nisn', 'nis', 'jenis_kelamin', 'kelas'],
+            [['Tanpa Identitas', '', '', 'L', '7A']],
+        ));
+
+        $this->assertSame(0, $import->success_count);
+        $this->assertSame('NISN atau NIS harus diisi.', $import->failures[0]['message']);
+    }
+
+    public function test_teacher_without_nip_can_be_imported(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('guru', $this->spreadsheet(
+            ['nama', 'email', 'nip', 'nuptk'],
+            [
+                ['Guru Yayasan', 'yayasan@sekolah.sch.id', '', '1234567890123456'],
+                ['Guru Honorer', 'honorer@sekolah.sch.id', '', ''],
+            ],
+        ));
+
+        $this->assertSame(2, $import->success_count, json_encode($import->failures) ?: '');
+
+        $yayasan = User::query()->where('email', 'yayasan@sekolah.sch.id')->firstOrFail();
+        $honorer = User::query()->where('email', 'honorer@sekolah.sch.id')->firstOrFail();
+
+        $this->assertNull($yayasan->nip);
+        $this->assertSame('1234567890123456', $yayasan->nuptk);
+        $this->assertNull($honorer->nip);
+        $this->assertNull($honorer->nuptk);
+        $this->assertTrue($honorer->hasRole('guru'));
+    }
+
+    public function test_duplicate_nuptk_is_rejected(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('guru', $this->spreadsheet(
+            ['nama', 'email', 'nuptk'],
+            [
+                ['Guru Satu', 'satu@sekolah.sch.id', '1111111111111111'],
+                ['Guru Dua', 'dua@sekolah.sch.id', '1111111111111111'],
+            ],
+        ));
+
+        $this->assertSame(1, $import->success_count);
+        $this->assertSame('NUPTK sudah digunakan guru lain.', $import->failures[0]['message']);
+    }
+
+    public function test_alternative_column_names_from_dapodik_exports_are_accepted(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('siswa', $this->spreadsheet(
+            ['nama_peserta_didik', 'nisn', 'jk', 'rombel'],
+            [['Budi Santoso', '0012345678', 'Laki-laki', '7A']],
+        ));
+
+        $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
+        $this->assertSame('L', User::query()->where('nisn', '0012345678')->firstOrFail()->gender);
+    }
+
     public function test_credentials_file_can_only_be_downloaded_once(): void
     {
         Storage::fake('local');
