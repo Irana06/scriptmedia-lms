@@ -24,7 +24,7 @@
                 <thead class="border-b border-line bg-offwhite text-xs uppercase tracking-wider text-ink-soft">
                     <tr>
                         <th class="px-5 py-4 font-semibold sm:px-6">Siswa</th>
-                        <th class="px-5 py-4 font-semibold">NISN</th>
+                        <th class="px-5 py-4 font-semibold">NISN / NIS</th>
                         <th class="px-5 py-4 font-semibold">Status akun</th>
                         <th class="px-5 py-4 text-right font-semibold sm:px-6">Tindakan</th>
                     </tr>
@@ -34,9 +34,19 @@
                         <tr>
                             <td class="px-5 py-4 sm:px-6">
                                 <p class="font-semibold text-navy">{{ $student->name }}</p>
-                                <p class="mt-1 text-xs text-ink-soft">{{ $student->nik ? 'NIK '.$student->nik : 'NIK belum diisi' }}</p>
+                                @if ($student->nik)
+                                    <p class="mt-1 text-xs text-ink-soft">NIK {{ $student->nik }}</p>
+                                @endif
                             </td>
-                            <td class="px-5 py-4 text-sm text-ink-soft">{{ $student->nisn }}</td>
+                            <td class="px-5 py-4 text-sm text-ink-soft">
+                                @if ($student->nisn)
+                                    {{ $student->nisn }}
+                                @elseif ($student->nis)
+                                    {{ $student->nis }} <span class="text-xs">(NIS)</span>
+                                @else
+                                    {{ $student->username }}
+                                @endif
+                            </td>
                             <td class="px-5 py-4">
                                 <x-theme.badge :tone="$student->must_change_password ? 'orange' : 'tosca-soft'">
                                     {{ $student->must_change_password ? 'Wajib ganti password' : 'Aktif' }}

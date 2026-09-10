@@ -39,11 +39,14 @@ class AccountImportService
                 try {
                     $key = $this->uniqueKey($dataImport->type, $row);
 
-                    if (isset($seen[$key])) {
+                    if ($key !== null && isset($seen[$key])) {
                         throw new RuntimeException('Data duplikat di dalam file.');
                     }
 
-                    $seen[$key] = true;
+                    if ($key !== null) {
+                        $seen[$key] = true;
+                    }
+
                     $credentials[] = $dataImport->type === 'siswa'
                         ? $this->importStudent($row)
                         : $this->importTeacher($row);
@@ -181,7 +184,9 @@ class AccountImportService
 
         Validator::make($values, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email:rfc', 'max:255'],
+            // Banyak guru di sekolah swasta tidak memiliki email aktif. Tanpa email,
+            // akun dibuatkan username dari nama yang tercetak pada kartu akun.
+            'email' => ['nullable', 'email:rfc', 'max:255'],
             // NIP hanya dimiliki ASN. Guru yayasan dan honorer di sekolah swasta
             // umumnya hanya punya NUPTK, atau belum punya keduanya.
             'nip' => ['nullable', 'string', 'max:30'],
@@ -189,10 +194,12 @@ class AccountImportService
         ])->validate();
 
         return DB::transaction(function () use ($values): array {
-            $user = User::query()->where('email', $values['email'])->first();
+            $user = $this->findExistingTeacher($values);
 
             if ($user && $user->roles()->exists() && ! $user->hasRole('guru')) {
-                throw new RuntimeException('Email sudah digunakan akun non-guru.');
+                throw new RuntimeException($values['email'] !== '' && $user->email === $values['email']
+                    ? 'Email sudah digunakan akun non-guru.'
+                    : 'NIP atau NUPTK sudah digunakan akun non-guru.');
             }
 
             foreach (['nip' => 'NIP', 'nuptk' => 'NUPTK'] as $field => $label) {
@@ -210,11 +217,34 @@ class AccountImportService
                 }
             }
 
+            $email = $values['email'];
+            $username = $user?->username;
+
+            if ($email === '') {
+                if ($user && ! Str::endsWith($user->email, '.invalid')) {
+                    // Guru yang sudah terdaftar dengan email sungguhan tetap memakainya.
+                    $email = $user->email;
+                } else {
+                    $username ??= $this->generateTeacherUsername($values['name']);
+                    $email = $username.'@guru.invalid';
+                }
+            }
+
+            $emailOwner = User::query()
+                ->where('email', $email)
+                ->when($user, fn ($query) => $query->whereKeyNot($user->id))
+                ->exists();
+
+            if ($emailOwner) {
+                throw new RuntimeException('Email sudah digunakan akun lain.');
+            }
+
             $password = $this->password();
             $user ??= new User;
             $user->fill([
                 'name' => $values['name'],
-                'email' => $values['email'],
+                'email' => $email,
+                'username' => $username,
                 'nip' => $values['nip'] !== '' ? $values['nip'] : null,
                 'nuptk' => $values['nuptk'] !== '' ? $values['nuptk'] : null,
                 'password' => $password,
@@ -224,18 +254,86 @@ class AccountImportService
             $user->save();
             $user->syncRoles([Role::findOrCreate('guru', 'web')]);
 
-            return ['name' => $user->name, 'login' => $user->email, 'password' => $password];
+            return ['name' => $user->name, 'login' => $user->username ?? $user->email, 'password' => $password];
         });
     }
 
-    /** @param array<string, mixed> $row */
-    private function uniqueKey(string $type, array $row): string
+    /**
+     * Cari guru yang sudah terdaftar agar impor ulang memperbarui akun, bukan
+     * menggandakannya. Email dicoba lebih dulu, lalu NUPTK dan NIP — sehingga
+     * guru yang dulu diimpor tanpa email tetap dikenali saat emailnya ditambahkan.
+     *
+     * @param  array{name: string, email: string, nip: string, nuptk: string}  $values
+     */
+    private function findExistingTeacher(array $values): ?User
+    {
+        if ($values['email'] !== '') {
+            $user = User::query()->where('email', $values['email'])->first();
+
+            if ($user) {
+                return $user;
+            }
+        }
+
+        foreach (['nuptk', 'nip'] as $field) {
+            if ($values[$field] === '') {
+                continue;
+            }
+
+            $user = User::query()->where($field, $values[$field])->first();
+
+            if (! $user) {
+                continue;
+            }
+
+            // Baris yang membawa email hanya boleh mencocokkan akun yang dulu
+            // diimpor tanpa email. Akun dengan email sungguhan yang berbeda adalah
+            // orang lain — kemungkinan besar NUPTK/NIP-nya salah ketik — dan tidak
+            // boleh ditimpa. Pemeriksaan keunikan setelahnya akan menolak baris ini.
+            if ($values['email'] !== '' && ! Str::endsWith($user->email, '.invalid')) {
+                return null;
+            }
+
+            return $user;
+        }
+
+        return null;
+    }
+
+    /**
+     * Username untuk guru tanpa email, dibuat dari nama agar mudah diketik di HP.
+     * NIP dan NUPTK tetap tersimpan sebagai identitas, bukan kredensial masuk —
+     * mengetik 18 digit angka setiap kali masuk terlalu mudah salah.
+     */
+    private function generateTeacherUsername(string $name): string
+    {
+        // Nama dari Dapodik sering membawa gelar setelah koma: "Siti Aminah, S.Pd."
+        $base = Str::slug(Str::before($name, ','), '.');
+        $base = $base !== '' ? $base : 'guru';
+        $candidate = $base;
+        $suffix = 2;
+
+        while (User::query()->where('username', $candidate)->orWhere('email', $candidate.'@guru.invalid')->exists()) {
+            $candidate = $base.$suffix++;
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * Kunci untuk mendeteksi baris ganda di dalam satu berkas. Baris tanpa
+     * identitas apa pun tidak bisa dibedakan dari orang lain bernama sama,
+     * jadi tidak diperlakukan sebagai duplikat.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private function uniqueKey(string $type, array $row): ?string
     {
         $value = $type === 'siswa'
             ? $this->pick($row, 'nisn') ?: $this->pick($row, 'nis', 'no_induk', 'nomor_induk', 'no_induk_siswa')
-            : $this->pick($row, 'email', 'surel', 'alamat_email');
+            : ($this->pick($row, 'email', 'surel', 'alamat_email') ?: $this->pick($row, 'nuptk') ?: $this->pick($row, 'nip'));
 
-        return $type.':'.Str::lower($value);
+        return $value === '' ? null : $type.':'.Str::lower($value);
     }
 
     /**

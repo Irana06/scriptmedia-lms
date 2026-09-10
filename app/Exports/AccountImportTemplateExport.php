@@ -21,7 +21,7 @@ class AccountImportTemplateExport implements FromArray, ShouldAutoSize, WithHead
             : [
                 ['Siti Aminah', 'siti.aminah@sekolah.sch.id', '198701012010012001', '1234567890123456'],
                 ['Ahmad Fauzi', 'ahmad.fauzi@sekolah.sch.id', '', '6543210987654321'],
-                ['Rina Lestari', 'rina.lestari@sekolah.sch.id', '', ''],
+                ['Rina Lestari', '', '', ''],
             ];
     }
 

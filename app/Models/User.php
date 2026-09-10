@@ -135,7 +135,9 @@ class User extends Authenticatable implements PasskeyUser
 
     public function sendPasswordResetNotification($token): void
     {
-        if ($this->hasRole('siswa')) {
+        // Siswa direset oleh staf. Guru tanpa email memakai alamat .invalid yang
+        // memang tidak bisa menerima surel, jadi tautan reset tidak dikirim.
+        if ($this->hasRole('siswa') || Str::endsWith($this->email, '.invalid')) {
             return;
         }
 

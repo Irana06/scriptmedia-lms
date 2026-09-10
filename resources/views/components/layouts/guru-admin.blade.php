@@ -54,6 +54,14 @@
                             Kelas & Siswa
                         </a>
                         @role('admin')
+                            <a href="{{ route('teachers.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('teachers.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('teachers.*'),
+                            ]) wire:navigate>
+                                <flux:icon.identification class="size-5" />
+                                Data Guru
+                            </a>
                             <a href="{{ route('admin.academic.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
                                 'bg-white/12 font-semibold text-white' => request()->routeIs('admin.academic.*'),

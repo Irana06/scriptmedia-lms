@@ -6,7 +6,7 @@
             </span>
             <div>
                 <p class="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-tosca-ink">Portal staf</p>
-                <x-auth-header title="Selamat datang kembali" description="Masuk dengan email akun admin atau guru Anda." />
+                <x-auth-header title="Selamat datang kembali" description="Masuk dengan email atau username akun admin maupun guru Anda." />
             </div>
         </div>
 
@@ -16,16 +16,18 @@
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
             @csrf
 
-            <!-- Email Address -->
+            <!-- Email atau username -->
             <flux:input
                 name="email"
-                label="Alamat email"
+                label="Email atau username"
                 :value="old('email')"
-                type="email"
+                type="text"
                 required
                 autofocus
-                autocomplete="email"
-                placeholder="nama@sekolah.id"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="nama@sekolah.id atau siti.aminah"
             />
 
             <!-- Password -->

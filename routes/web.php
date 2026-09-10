@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\LearningFileController;
 use App\Http\Controllers\RoleDashboardController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
 use App\Livewire\Admin\ReportCards;
@@ -79,6 +80,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('guru/evaluasi', EvaluationManager::class)
         ->middleware('role:guru')
         ->name('teacher.evaluation.index');
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('guru', [TeacherController::class, 'index'])->name('teachers.index');
+        Route::post('guru/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])
+            ->name('teachers.password.reset');
+    });
 
     Route::middleware('role:admin|guru')->group(function () {
         Route::livewire('komunikasi', CommunicationManager::class)->name('communications.index');

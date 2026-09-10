@@ -241,12 +241,15 @@ class DemoSeeder extends Seeder
         $teachers = collect([
             ['name' => 'Pak Hendra Demo', 'email' => 'hendra.demo@example.com', 'nip' => '198203152008011003'],
             ['name' => 'Bu Yuli Demo', 'email' => 'yuli.demo@example.com', 'nuptk' => '7845762663300012'],
-            ['name' => 'Pak Iwan Demo', 'email' => 'iwan.demo@example.com'],
+            // Tanpa email dan tanpa NIP/NUPTK: memperlihatkan guru sekolah swasta
+            // yang masuk memakai username.
+            ['name' => 'Pak Iwan Demo', 'email' => 'iwan.demo@guru.invalid', 'username' => 'iwan.demo'],
         ])->map(fn (array $item): User => $this->user(
             email: $item['email'],
             name: $item['name'],
             role: 'guru',
             extra: array_filter([
+                'username' => $item['username'] ?? null,
                 'nip' => $item['nip'] ?? null,
                 'nuptk' => $item['nuptk'] ?? null,
             ]),

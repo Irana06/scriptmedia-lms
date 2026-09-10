@@ -71,6 +71,10 @@ php artisan db:seed --class=DemoSeeder --force
 Ia menyiapkan dua kelas, empat guru, dua puluh siswa, riwayat presensi dua pekan, dan satu
 riwayat impor yang sudah selesai.
 
+Semua akun demo memakai password `Demo12345!`. Salah satu guru, Pak Iwan Demo, sengaja
+dibuat tanpa email dan masuk memakai username `iwan.demo` — untuk memperlihatkan alur guru
+sekolah swasta yang tidak punya email.
+
 Tombol masuk sekali klik di halaman depan muncul hanya bila `APP_DEMO_MODE=true` di `.env`.
 **Matikan sebelum sekolah memasukkan data sungguhan** — tombol itu memberi akses admin penuh
 kepada siapa pun yang membuka halaman depan.

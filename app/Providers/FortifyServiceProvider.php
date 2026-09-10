@@ -40,8 +40,13 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
         Fortify::authenticateUsing(function (Request $request): ?User {
+            // Kolom form tetap bernama "email" agar konfigurasi Fortify dan batas
+            // percobaan masuk tidak berubah, tetapi isinya boleh berupa username:
+            // guru tanpa email masuk memakai username yang tercetak di kartu akun.
+            $login = Str::lower(trim($request->string('email')->toString()));
+
             $user = User::query()
-                ->where('email', $request->string('email'))
+                ->where(fn ($query) => $query->where('email', $login)->orWhere('username', $login))
                 ->first();
 
             return $user?->hasAnyRole(['admin', 'guru']) && Hash::check($request->string('password'), $user->password)

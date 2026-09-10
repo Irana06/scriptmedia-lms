@@ -228,6 +228,38 @@ class AccountImportTest extends TestCase
 
         $this->assertSame(1, $import->success_count);
         $this->assertSame('NUPTK sudah digunakan guru lain.', $import->failures[0]['message']);
+
+        // Baris kedua tidak boleh mengambil alih akun guru pertama.
+        $first = User::query()->where('nuptk', '1111111111111111')->firstOrFail();
+        $this->assertSame('satu@sekolah.sch.id', $first->email);
+        $this->assertSame('Guru Satu', $first->name);
+        $this->assertNull(User::query()->where('email', 'dua@sekolah.sch.id')->first());
+    }
+
+    public function test_teacher_first_imported_without_email_is_updated_when_their_email_is_added(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create([
+            'email' => 'rina.lestari@guru.invalid',
+            'username' => 'rina.lestari',
+            'nuptk' => '2222222222222222',
+        ]);
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('guru', $this->spreadsheet(
+            ['nama', 'email', 'nuptk'],
+            [['Rina Lestari', 'rina@sekolah.sch.id', '2222222222222222']],
+        ));
+
+        $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
+        $this->assertSame(2, User::query()->count());
+
+        $teacher->refresh();
+
+        $this->assertSame('rina@sekolah.sch.id', $teacher->email);
+        $this->assertSame('rina.lestari', $teacher->username);
     }
 
     public function test_alternative_column_names_from_dapodik_exports_are_accepted(): void
@@ -246,6 +278,59 @@ class AccountImportTest extends TestCase
 
         $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
         $this->assertSame('L', User::query()->where('nisn', '0012345678')->firstOrFail()->gender);
+    }
+
+    public function test_teacher_without_email_gets_a_username_from_their_name(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('guru', $this->spreadsheet(
+            ['nama', 'email', 'nip', 'nuptk'],
+            [
+                ['Rina Lestari, S.Pd.', '', '', ''],
+                ['Rina Lestari', '', '', ''],
+            ],
+        ));
+
+        $this->assertSame(2, $import->success_count, json_encode($import->failures) ?: '');
+
+        $first = User::query()->where('username', 'rina.lestari')->firstOrFail();
+        $second = User::query()->where('username', 'rina.lestari2')->firstOrFail();
+
+        $this->assertSame('rina.lestari@guru.invalid', $first->email);
+        $this->assertSame('Rina Lestari, S.Pd.', $first->name);
+        $this->assertNotNull($first->email_verified_at);
+        $this->assertTrue($first->hasRole('guru'));
+        $this->assertTrue($second->hasRole('guru'));
+    }
+
+    public function test_reimporting_a_teacher_by_nuptk_without_email_keeps_their_existing_email(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create([
+            'email' => 'yuli@sekolah.sch.id',
+            'nuptk' => '7845762663300012',
+        ]);
+
+        $this->actingAs($admin);
+
+        $import = $this->runImport('guru', $this->spreadsheet(
+            ['nama', 'email', 'nuptk'],
+            [['Yuli Astuti', '', '7845762663300012']],
+        ));
+
+        $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
+        $this->assertSame(2, User::query()->count());
+
+        $teacher->refresh();
+
+        $this->assertSame('yuli@sekolah.sch.id', $teacher->email);
+        $this->assertSame('Yuli Astuti', $teacher->name);
+        $this->assertNull($teacher->username);
     }
 
     public function test_credentials_file_can_only_be_downloaded_once(): void

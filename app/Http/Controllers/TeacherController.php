@@ -8,29 +8,29 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class StudentController extends Controller
+class TeacherController extends Controller
 {
     public function index(): View
     {
-        $students = User::role('siswa')
+        $teachers = User::role('guru')
             ->orderBy('name')
             ->paginate(15);
 
-        return view('students.index', compact('students'));
+        return view('teachers.index', compact('teachers'));
     }
 
     public function resetPassword(
         Request $request,
-        User $student,
+        User $teacher,
         ResetAccountPassword $resetAccountPassword,
     ): RedirectResponse {
-        abort_unless($student->hasRole('siswa'), 404);
+        abort_unless($teacher->hasRole('guru'), 404);
 
-        $password = $resetAccountPassword->handle($student, $request->user());
+        $password = $resetAccountPassword->handle($teacher, $request->user());
 
         return back()
-            ->with('reset_student_id', $student->id)
-            ->with('reset_student_name', $student->name)
+            ->with('reset_user_id', $teacher->id)
+            ->with('reset_user_name', $teacher->name)
             ->with('generated_password', $password)
             ->withHeaders(['Cache-Control' => 'no-store']);
     }

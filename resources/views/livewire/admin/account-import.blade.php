@@ -73,7 +73,7 @@
                                 <span class="flex size-10 items-center justify-center rounded-xl bg-white text-tosca shadow-sm"><flux:icon.academic-cap class="size-5" /></span>
                                 <span>
                                     <span class="block text-sm font-semibold text-navy">Guru</span>
-                                    <span class="mt-0.5 block text-xs text-ink-soft">Nama, email, dan NIP</span>
+                                    <span class="mt-0.5 block text-xs text-ink-soft">Nama, serta email, NIP, atau NUPTK bila ada</span>
                                 </span>
                             </span>
                         </label>
@@ -128,7 +128,7 @@
                     <p class="text-sm font-semibold text-navy">Kolom yang boleh kosong</p>
                     <ul class="mt-2 space-y-1.5 text-xs leading-5 text-ink-soft">
                         <li><strong class="text-navy">Siswa</strong> — isi NISN <em>atau</em> NIS, tidak harus keduanya. Siswa baru yang NISN-nya belum terbit tetap bisa dibuatkan akun memakai nomor induk sekolah. NIK boleh dikosongkan.</li>
-                        <li><strong class="text-navy">Guru</strong> — NIP dan NUPTK keduanya opsional. Guru yayasan dan honorer umumnya tidak memiliki NIP.</li>
+                        <li><strong class="text-navy">Guru</strong> — email, NIP, dan NUPTK semuanya opsional. Guru tanpa email dibuatkan username dari namanya, tercetak di kartu akun. Isi setidaknya salah satu dari ketiganya agar impor ulang memperbarui akun yang sama, bukan membuat akun baru.</li>
                     </ul>
                     <p class="mt-3 text-xs leading-5 text-ink-soft">Berkas hasil ekspor Dapodik atau EMIS bisa langsung diunggah tanpa mengganti nama kolomnya.</p>
                 </div>
