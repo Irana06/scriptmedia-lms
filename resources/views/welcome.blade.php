@@ -53,7 +53,7 @@
                             @else
                                 <a href="{{ route('login') }}" class="group flex min-h-20 items-center gap-4 rounded-2xl border border-line p-4 transition hover:border-tosca hover:bg-tosca-tint/40">
                                     <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white"><flux:icon.user-group class="size-5" /></span>
-                                    <span class="min-w-0 flex-1"><strong class="block text-navy">Admin & guru</strong><span class="mt-1 block text-sm text-ink-soft">Masuk menggunakan email sekolah</span></span>
+                                    <span class="min-w-0 flex-1"><strong class="block text-navy">Admin & guru</strong><span class="mt-1 block text-sm text-ink-soft">Masuk menggunakan email atau username</span></span>
                                     <flux:icon.arrow-right class="size-5 text-tosca transition group-hover:translate-x-1" />
                                 </a>
                                 <a href="{{ route('siswa.login') }}" class="group flex min-h-20 items-center gap-4 rounded-2xl border border-line p-4 transition hover:border-orange hover:bg-orange/5">

@@ -348,6 +348,102 @@ class DemoSeeder extends Seeder
                 'created_by' => $admin->id,
             ],
         );
+
+        $this->seedDemoTeacherWeek($semester, $firstClass, $secondClass);
+    }
+
+    /**
+     * Tombol "Masuk Guru" di halaman depan memakai akun Ibu Ratna. Tanpa ini,
+     * dashboard-nya hanya berisi satu kelas, jadwal kosong di sebagian besar
+     * hari, dan tidak ada tugas yang menunggu dinilai — sisi guru terlihat mati
+     * justru saat didemokan.
+     */
+    private function seedDemoTeacherWeek(Semester $semester, SchoolClass $firstClass, SchoolClass $secondClass): void
+    {
+        $teacher = User::query()->where('email', 'guru.demo@example.com')->firstOrFail();
+        $subjects = Subject::query()->whereIn('code', ['MAT-DEMO', 'IPA-DEMO'])->get()->keyBy('code');
+
+        /** @var array<string, array<string, ClassSubject>> $classSubjects */
+        $classSubjects = [];
+
+        foreach ([$firstClass, $secondClass] as $class) {
+            foreach ($subjects as $code => $subject) {
+                $classSubjects[$class->name][$code] = ClassSubject::query()->updateOrCreate(
+                    ['class_id' => $class->id, 'subject_id' => $subject->id],
+                    ['teacher_id' => $teacher->id],
+                );
+            }
+        }
+
+        // Satu sesi setiap hari sekolah agar "Jadwal hari ini" tidak pernah kosong
+        // kapan pun demo dilakukan. Slot dipilih supaya tidak bentrok dengan mapel
+        // lain di kelas yang sama maupun dengan sesi Ibu Ratna yang sudah ada.
+        $week = [
+            ['Senin', $secondClass, 'MAT-DEMO', '10:00', '11:30'],
+            ['Selasa', $firstClass, 'IPA-DEMO', '09:00', '10:30'],
+            ['Rabu', $secondClass, 'IPA-DEMO', '07:00', '08:30'],
+            ['Kamis', $secondClass, 'MAT-DEMO', '07:00', '08:30'],
+            ['Jumat', $firstClass, 'MAT-DEMO', '13:00', '14:30'],
+            ['Sabtu', $secondClass, 'IPA-DEMO', '08:00', '09:30'],
+        ];
+
+        foreach ($week as [$day, $class, $code, $start, $end]) {
+            Schedule::query()->updateOrCreate(
+                ['class_subject_id' => $classSubjects[$class->name][$code]->id, 'day' => $day, 'start_time' => $start.':00'],
+                ['end_time' => $end.':00'],
+            );
+        }
+
+        // Kumpulan tugas yang belum dinilai, supaya alur penilaian bisa langsung
+        // didemokan. Budi, akun tombol "Masuk Siswa", sengaja tidak ikut agar
+        // tugas ini tetap muncul di daftar deadline-nya.
+        $assignment = Assignment::query()
+            ->where('class_subject_id', $classSubjects[$firstClass->name]['MAT-DEMO']->id)
+            ->where('title', 'Latihan Persamaan Linear')
+            ->firstOrFail();
+
+        $answerPath = 'learning/demo/jawaban-latihan-persamaan-linear.pdf';
+        Storage::disk('local')->put($answerPath, Pdf::loadHTML(<<<'HTML'
+            <html><body style="font-family: DejaVu Sans, sans-serif; color: #0b2545; padding: 28px;">
+                <h1>Jawaban Latihan Persamaan Linear</h1>
+                <p>1. 3x + 5 = 20, maka 3x = 15 dan x = 5.</p>
+                <p>2. 4x - 8 = 12, maka 4x = 20 dan x = 5.</p>
+                <p>3. 2(x + 3) = 14, maka x + 3 = 7 dan x = 4.</p>
+            </body></html>
+            HTML)->setPaper('a4')->output());
+
+        $submitters = $firstClass->students()->get()
+            ->reject(fn (User $student): bool => $student->username === '0099000001')
+            ->take(5)
+            ->values();
+
+        foreach ($submitters as $position => $student) {
+            AssignmentSubmission::query()->updateOrCreate(
+                ['assignment_id' => $assignment->id, 'student_id' => $student->id],
+                ['file_path' => $answerPath, 'submitted_at' => now()->subHours(6 + $position * 5)],
+            );
+        }
+
+        // Nilai akhir untuk semua siswa di kedua kelas. firstOrCreate menjaga
+        // nilai tiga siswa pertama yang ditulis tangan di atas tetap utuh.
+        foreach ([$firstClass, $secondClass] as $class) {
+            $students = $class->students()->get();
+
+            foreach ($classSubjects[$class->name] as $classSubject) {
+                foreach ($students as $student) {
+                    $score = 70 + (($student->id * 7 + $classSubject->id) % 26);
+
+                    Grade::query()->firstOrCreate(
+                        ['student_id' => $student->id, 'class_subject_id' => $classSubject->id, 'semester_id' => $semester->id],
+                        ['final_score' => $score, 'predikat' => match (true) {
+                            $score >= 90 => 'A',
+                            $score >= 80 => 'B',
+                            default => 'C',
+                        }],
+                    );
+                }
+            }
+        }
     }
 
     /**
