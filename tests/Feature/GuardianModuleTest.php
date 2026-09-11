@@ -384,4 +384,26 @@ class GuardianModuleTest extends TestCase
 
         $this->assertDatabaseCount('password_reset_logs', 0);
     }
+
+    public function test_admin_sidebar_shows_the_pending_request_count_on_every_admin_page(): void
+    {
+        [$student] = $this->studentInClass();
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+        $this->guardianOf($student, GuardianLink::PENDING);
+        $this->guardianOf($student, GuardianLink::PENDING);
+        $this->guardianOf($student);
+
+        // Bukan dashboard: lencana harus terlihat dari halaman admin mana pun.
+        $this->actingAs($admin)
+            ->get(route('teachers.index'))
+            ->assertOk()
+            ->assertSee('data-test="pending-guardian-badge"', false)
+            ->assertSee('aria-label="2 permintaan menunggu"', false);
+
+        $this->actingAs($teacher)
+            ->get(route('dashboard.guru'))
+            ->assertOk()
+            ->assertDontSee('data-test="pending-guardian-badge"', false);
+    }
 }

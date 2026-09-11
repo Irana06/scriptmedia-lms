@@ -69,6 +69,9 @@
                             ]) wire:navigate>
                                 <flux:icon.home-modern class="size-5" />
                                 Orang Tua
+                                @if (($pendingGuardianCount ?? 0) > 0)
+                                    <span data-test="pending-guardian-badge" class="ml-auto rounded-full bg-orange px-2 py-0.5 text-xs font-semibold text-navy" aria-label="{{ $pendingGuardianCount }} permintaan menunggu">{{ $pendingGuardianCount }}</span>
+                                @endif
                             </a>
                             <a href="{{ route('admin.academic.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
