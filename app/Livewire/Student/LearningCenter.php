@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Student;
 
+use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\ClassSubject;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -21,6 +21,7 @@ use Livewire\WithFileUploads;
 #[Title('Ruang Belajar')]
 class LearningCenter extends Component
 {
+    use ResolvesStudent;
     use WithFileUploads;
 
     #[Url]
@@ -44,8 +45,12 @@ class LearningCenter extends Component
 
     public function submitAssignment(int $assignmentId): void
     {
+        // Mengumpulkan tugas adalah aksi, bukan membaca data: selalu atas nama
+        // siswa yang sedang login, tidak pernah atas nama siswa yang sedang dilihat.
+        $studentId = $this->actingStudentId();
+
         $assignment = Assignment::query()
-            ->whereHas('classSubject.schoolClass.students', fn ($query) => $query->whereKey(Auth::id()))
+            ->whereHas('classSubject.schoolClass.students', fn ($query) => $query->whereKey($studentId))
             ->findOrFail($assignmentId);
 
         if (now()->isAfter($assignment->deadline)) {
@@ -55,16 +60,16 @@ class LearningCenter extends Component
         $this->validate(['submissionFile' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,zip,jpg,jpeg,png', 'max:20480']]);
         $existing = AssignmentSubmission::query()
             ->where('assignment_id', $assignment->id)
-            ->where('student_id', Auth::id())
+            ->where('student_id', $studentId)
             ->first();
-        $path = $this->submissionFile?->store("learning/submissions/{$assignment->id}/".Auth::id(), 'local');
+        $path = $this->submissionFile?->store("learning/submissions/{$assignment->id}/".$studentId, 'local');
 
         if ($existing) {
             Storage::disk('local')->delete($existing->file_path);
         }
 
         AssignmentSubmission::query()->updateOrCreate(
-            ['assignment_id' => $assignment->id, 'student_id' => Auth::id()],
+            ['assignment_id' => $assignment->id, 'student_id' => $studentId],
             ['file_path' => $path, 'submitted_at' => now()],
         );
         $this->reset('submissionFile');
@@ -73,13 +78,15 @@ class LearningCenter extends Component
 
     public function render(): View
     {
+        $studentId = $this->viewedStudentId();
+
         $selected = $this->classSubjectId !== ''
             ? $this->subjectsQuery()->with([
                 'schoolClass', 'subject', 'teacher', 'materials.files',
                 'assignments' => fn ($query) => $query->orderBy('deadline'),
-                'assignments.submissions' => fn ($query) => $query->where('student_id', Auth::id()),
+                'assignments.submissions' => fn ($query) => $query->where('student_id', $studentId),
                 'assignments.submissions.grade', 'quizzes.questions',
-                'quizzes.attempts' => fn ($query) => $query->where('student_id', Auth::id()),
+                'quizzes.attempts' => fn ($query) => $query->where('student_id', $studentId),
             ])->find($this->classSubjectId)
             : null;
 
@@ -92,8 +99,10 @@ class LearningCenter extends Component
     /** @return Builder<ClassSubject> */
     private function subjectsQuery(): Builder
     {
+        $studentId = $this->viewedStudentId();
+
         return ClassSubject::query()
-            ->whereHas('schoolClass.students', fn ($query) => $query->whereKey(Auth::id()))
+            ->whereHas('schoolClass.students', fn ($query) => $query->whereKey($studentId))
             ->orderBy('subject_id');
     }
 }

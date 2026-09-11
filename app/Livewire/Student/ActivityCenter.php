@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Student;
 
+use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\Announcement;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
@@ -11,7 +12,6 @@ use App\Models\QuizAttempt;
 use App\Models\SchoolClass;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -22,12 +22,14 @@ use Livewire\Component;
 #[Title('Pusat Aktivitas')]
 class ActivityCenter extends Component
 {
+    use ResolvesStudent;
+
     #[Url]
     public string $tab = 'todo';
 
     public function render(): View
     {
-        $studentId = (int) Auth::id();
+        $studentId = $this->viewedStudentId();
         $classIds = $this->activeClassIds($studentId);
 
         $assignmentScope = fn (Builder $query): Builder => $query

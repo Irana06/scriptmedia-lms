@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Student;
 
+use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\AssignmentGrade;
 use App\Models\Attendance;
 use App\Models\Grade;
 use App\Models\QuizAttempt;
 use App\Models\Semester;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -18,6 +18,8 @@ use Livewire\Component;
 #[Title('Nilai & Presensi')]
 class EvaluationSummary extends Component
 {
+    use ResolvesStudent;
+
     #[Url]
     public string $semesterId = '';
 
@@ -35,21 +37,22 @@ class EvaluationSummary extends Component
 
     public function render(): View
     {
+        $studentId = $this->viewedStudentId();
         $semester = $this->semesterId !== '' ? Semester::query()->with('academicYear')->find($this->semesterId) : null;
         $grades = $semester
-            ? Grade::query()->with('classSubject.subject', 'classSubject.teacher')->where('student_id', Auth::id())->where('semester_id', $semester->id)->get()
+            ? Grade::query()->with('classSubject.subject', 'classSubject.teacher')->where('student_id', $studentId)->where('semester_id', $semester->id)->get()
             : collect();
         $selectedGrade = $this->classSubjectId !== ''
             ? $grades->firstWhere('class_subject_id', (int) $this->classSubjectId)
             : null;
         $attendance = $semester
-            ? Attendance::query()->where('student_id', Auth::id())->whereBetween('date', [$semester->start_date, $semester->end_date])->get()
+            ? Attendance::query()->where('student_id', $studentId)->whereBetween('date', [$semester->start_date, $semester->end_date])->get()
             : collect();
         $presentCount = $attendance->where('status', 'hadir')->count();
         $assignmentScores = $selectedGrade && $semester
             ? AssignmentGrade::query()
                 ->with('submission.assignment')
-                ->whereHas('submission', fn ($query) => $query->where('student_id', Auth::id()))
+                ->whereHas('submission', fn ($query) => $query->where('student_id', $studentId))
                 ->whereHas('submission.assignment', fn ($query) => $query
                     ->where('class_subject_id', $selectedGrade->class_subject_id)
                     ->whereBetween('deadline', [$semester->start_date, $semester->end_date]))
@@ -58,7 +61,7 @@ class EvaluationSummary extends Component
         $quizScores = $selectedGrade && $semester
             ? QuizAttempt::query()
                 ->with('quiz')
-                ->where('student_id', Auth::id())
+                ->where('student_id', $studentId)
                 ->whereNotNull('submitted_at')
                 ->whereHas('quiz', fn ($query) => $query
                     ->where('class_subject_id', $selectedGrade->class_subject_id)

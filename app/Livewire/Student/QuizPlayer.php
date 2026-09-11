@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Student;
 
+use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Services\QuizScoringService;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -19,6 +19,8 @@ use Livewire\Component;
 #[Title('Kerjakan Kuis')]
 class QuizPlayer extends Component
 {
+    use ResolvesStudent;
+
     public Quiz $quiz;
 
     public QuizAttempt $attempt;
@@ -28,14 +30,17 @@ class QuizPlayer extends Component
 
     public function mount(Quiz $quiz): void
     {
+        // Membuka kuis langsung membuat percobaan, jadi ini aksi siswa yang login.
+        $studentId = $this->actingStudentId();
+
         $this->quiz = $quiz->load('questions.choices', 'classSubject.schoolClass.students');
-        abort_unless($this->quiz->classSubject->schoolClass->students->contains('id', Auth::id()), 403);
+        abort_unless($this->quiz->classSubject->schoolClass->students->contains('id', $studentId), 403);
         abort_if(now()->isBefore($quiz->open_at), 403, 'Kuis belum dibuka.');
         abort_if(now()->isAfter($quiz->close_at), 403, 'Kuis sudah ditutup.');
         abort_if($quiz->questions->isEmpty(), 403, 'Kuis belum memiliki soal.');
 
         $this->attempt = QuizAttempt::query()->firstOrCreate(
-            ['quiz_id' => $quiz->id, 'student_id' => Auth::id()],
+            ['quiz_id' => $quiz->id, 'student_id' => $studentId],
             ['started_at' => now()],
         );
         $this->answers = $this->attempt->answers()->pluck('answer', 'question_id')->map(fn ($value): string => (string) $value)->all();

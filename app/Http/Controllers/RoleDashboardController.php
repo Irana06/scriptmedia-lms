@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Auth\StudentAccess;
 use App\Models\Announcement;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
@@ -49,9 +50,9 @@ class RoleDashboardController extends Controller
         ]);
     }
 
-    public function student(Request $request): View
+    public function student(StudentAccess $studentAccess): View
     {
-        $studentId = $request->user()->id;
+        $studentId = $studentAccess->viewedStudent()->id;
         $classIds = SchoolClass::query()
             ->whereHas('academicYear', fn ($query) => $query->where('is_active', true))
             ->whereHas('students', fn ($query) => $query->whereKey($studentId))
