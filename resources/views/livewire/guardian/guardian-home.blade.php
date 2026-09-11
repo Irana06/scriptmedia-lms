@@ -252,9 +252,19 @@
                             <p class="font-semibold text-navy">{{ $linkRequest->student->name }}</p>
                             <p class="text-xs text-ink-soft">Diajukan {{ $linkRequest->created_at?->translatedFormat('d M Y') }} · {{ ucfirst((string) $linkRequest->relationship) }}</p>
                         </div>
-                        <x-theme.badge :tone="$linkRequest->status === 'pending' ? 'orange' : 'danger'">
-                            {{ $linkRequest->status === 'pending' ? 'Menunggu persetujuan' : 'Ditolak' }}
-                        </x-theme.badge>
+                        <div class="flex shrink-0 flex-col items-end gap-2">
+                            <x-theme.badge :tone="$linkRequest->status === 'pending' ? 'orange' : 'danger'">
+                                {{ $linkRequest->status === 'pending' ? 'Menunggu persetujuan' : 'Ditolak' }}
+                            </x-theme.badge>
+                            @if ($linkRequest->status === 'pending')
+                                <button
+                                    type="button"
+                                    wire:click="cancelRequest({{ $linkRequest->id }})"
+                                    wire:confirm="Batalkan permintaan untuk {{ $linkRequest->student->name }}?"
+                                    class="text-xs font-semibold text-ink-soft underline-offset-2 transition hover:text-red-700 hover:underline"
+                                >Batalkan</button>
+                            @endif
+                        </div>
                     </li>
                 @empty
                     <li class="py-6 text-sm text-ink-soft">Tidak ada permintaan yang menunggu.</li>

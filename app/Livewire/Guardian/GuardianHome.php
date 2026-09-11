@@ -52,6 +52,26 @@ class GuardianHome extends Component
         app(StudentAccess::class)->selectChild($this->guardian(), $studentId);
     }
 
+    public function cancelRequest(int $linkId): void
+    {
+        $guardian = $this->guardian();
+
+        // Hanya permintaan milik sendiri yang masih menunggu. Permintaan yang
+        // ditolak sengaja tidak bisa dihapus, supaya tidak bisa diajukan ulang
+        // berkali-kali dan penolakan admin tetap berarti.
+        $link = GuardianLink::query()
+            ->where('guardian_id', $guardian->id)
+            ->pending()
+            ->whereKey($linkId)
+            ->first();
+
+        abort_unless($link instanceof GuardianLink, 404);
+
+        $link->delete();
+
+        session()->flash('guardian_status', 'Permintaan dibatalkan.');
+    }
+
     public function requestLink(): void
     {
         $guardian = $this->guardian();
