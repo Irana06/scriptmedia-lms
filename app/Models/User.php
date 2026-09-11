@@ -38,9 +38,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
+ * @property string|null $phone
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'username', 'nisn', 'nis', 'nik', 'gender', 'nip', 'nuptk', 'password', 'must_change_password'])]
+#[Fillable(['name', 'email', 'phone', 'username', 'nisn', 'nis', 'nik', 'gender', 'nip', 'nuptk', 'password', 'must_change_password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -131,6 +132,29 @@ class User extends Authenticatable implements PasskeyUser
     public function calendarEvents(): HasMany
     {
         return $this->hasMany(CalendarEvent::class, 'created_by');
+    }
+
+    /**
+     * Semua tautan milik akun orang tua, termasuk yang masih menunggu atau ditolak.
+     *
+     * @return HasMany<GuardianLink, $this>
+     */
+    public function guardianLinks(): HasMany
+    {
+        return $this->hasMany(GuardianLink::class, 'guardian_id');
+    }
+
+    /**
+     * Anak yang datanya boleh dilihat: hanya tautan yang sudah disetujui admin.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function children(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'guardian_student', 'guardian_id', 'student_id')
+            ->wherePivot('status', GuardianLink::APPROVED)
+            ->withPivot('relationship')
+            ->withTimestamps();
     }
 
     public function sendPasswordResetNotification($token): void

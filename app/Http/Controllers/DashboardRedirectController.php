@@ -15,6 +15,7 @@ class DashboardRedirectController extends Controller
             $user->hasRole('admin') => 'dashboard.admin',
             $user->hasRole('guru') => 'dashboard.guru',
             $user->hasRole('siswa') => 'dashboard.siswa',
+            $user->hasRole('ortu') => 'dashboard.ortu',
             default => abort(403, 'Akun belum memiliki role.'),
         };
 

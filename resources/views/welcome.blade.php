@@ -61,6 +61,11 @@
                                     <span class="min-w-0 flex-1"><strong class="block text-navy">Siswa</strong><span class="mt-1 block text-sm text-ink-soft">Masuk menggunakan NISN</span></span>
                                     <flux:icon.arrow-right class="size-5 text-orange transition group-hover:translate-x-1" />
                                 </a>
+                                <a href="{{ route('ortu.login') }}" class="group flex min-h-20 items-center gap-4 rounded-2xl border border-line p-4 transition hover:border-tosca hover:bg-tosca-tint/40">
+                                    <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-tosca text-navy"><flux:icon.home-modern class="size-5" /></span>
+                                    <span class="min-w-0 flex-1"><strong class="block text-navy">Orang tua & wali</strong><span class="mt-1 block text-sm text-ink-soft">Pantau jadwal dan kehadiran anak</span></span>
+                                    <flux:icon.arrow-right class="size-5 text-tosca transition group-hover:translate-x-1" />
+                                </a>
                             @endauth
                         </div>
 
@@ -70,8 +75,8 @@
                                     <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-tosca text-white"><flux:icon.beaker class="size-5" /></span>
                                     <div><p class="font-semibold text-navy">Coba akun demo</p><p class="mt-1 text-xs leading-5 text-ink-soft">Untuk preview saja — pilih peran untuk masuk tanpa mengetik kredensial.</p></div>
                                 </div>
-                                <div class="mt-4 grid gap-2 sm:grid-cols-3">
-                                    @foreach ([['admin', 'Admin', 'shield-check'], ['guru', 'Guru', 'academic-cap'], ['siswa', 'Siswa', 'user']] as [$role, $label, $icon])
+                                <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                                    @foreach ([['admin', 'Admin', 'shield-check'], ['guru', 'Guru', 'academic-cap'], ['siswa', 'Siswa', 'user'], ['ortu', 'Orang Tua', 'home-modern']] as [$role, $label, $icon])
                                         <form method="POST" action="{{ route('demo.login', $role) }}">
                                             @csrf
                                             <button type="submit" class="group flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-navy transition hover:-translate-y-px hover:border-tosca hover:text-tosca-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tosca focus-visible:ring-offset-2"><flux:icon :name="$icon" class="size-4 text-tosca" />Masuk {{ $label }}<flux:icon.arrow-right class="size-4 transition group-hover:translate-x-0.5" /></button>
@@ -82,7 +87,7 @@
                             </div>
                         @endif
 
-                        <p class="mt-8 text-sm leading-6 text-ink-soft">Siswa tidak dapat mendaftar sendiri. Hubungi admin sekolah jika belum menerima akun atau memerlukan reset password.</p>
+                        <p class="mt-8 text-sm leading-6 text-ink-soft">Siswa tidak dapat mendaftar sendiri. Hubungi admin sekolah jika belum menerima akun atau memerlukan reset password. Orang tua dapat <a href="{{ route('ortu.register') }}" class="font-semibold text-tosca-ink hover:underline">mendaftar sendiri</a>.</p>
                     </div>
                 </section>
             </div>

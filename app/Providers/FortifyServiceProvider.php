@@ -49,7 +49,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ->where(fn ($query) => $query->where('email', $login)->orWhere('username', $login))
                 ->first();
 
-            return $user?->hasAnyRole(['admin', 'guru']) && Hash::check($request->string('password'), $user->password)
+            return $user?->hasAnyRole(['admin', 'guru', 'ortu']) && Hash::check($request->string('password'), $user->password)
                 ? $user
                 : null;
         });

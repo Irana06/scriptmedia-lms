@@ -8,6 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\DataImport;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Support\UsernameGenerator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -307,17 +308,7 @@ class AccountImportService
      */
     private function generateTeacherUsername(string $name): string
     {
-        // Nama dari Dapodik sering membawa gelar setelah koma: "Siti Aminah, S.Pd."
-        $base = Str::slug(Str::before($name, ','), '.');
-        $base = $base !== '' ? $base : 'guru';
-        $candidate = $base;
-        $suffix = 2;
-
-        while (User::query()->where('username', $candidate)->orWhere('email', $candidate.'@guru.invalid')->exists()) {
-            $candidate = $base.$suffix++;
-        }
-
-        return $candidate;
+        return UsernameGenerator::fromName($name, 'guru.invalid');
     }
 
     /**

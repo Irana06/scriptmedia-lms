@@ -18,6 +18,7 @@ class DemoLoginController extends Controller
             'admin' => ['email' => 'admin.demo@example.com', 'role' => 'admin'],
             'guru' => ['email' => 'guru.demo@example.com', 'role' => 'guru'],
             'siswa' => ['email' => '0099000001@students.invalid', 'role' => 'siswa'],
+            'ortu' => ['email' => 'ortu.demo@example.com', 'role' => 'ortu'],
         ];
         abort_unless(array_key_exists($role, $accounts), 404);
 

@@ -12,6 +12,7 @@ use App\Models\CalendarEvent;
 use App\Models\ClassSubject;
 use App\Models\DataImport;
 use App\Models\Grade;
+use App\Models\GuardianLink;
 use App\Models\Material;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
@@ -229,6 +230,48 @@ class DemoSeeder extends Seeder
         $this->seedSecondClass($admin, $year, $semester, $class);
         $this->seedAttendanceHistory($semester);
         $this->seedImportHistory($admin);
+        $this->seedGuardians($admin);
+    }
+
+    /**
+     * Satu orang tua yang sudah tertaut ke Budi agar sisi orang tua bisa
+     * didemokan, dan satu permintaan yang menunggu agar alur persetujuan
+     * admin terlihat.
+     */
+    private function seedGuardians(User $admin): void
+    {
+        $mother = $this->user(
+            email: 'ortu.demo@example.com',
+            name: 'Ibu Sri Demo',
+            role: 'ortu',
+            extra: ['phone' => '081200000001'],
+        );
+        $father = $this->user(
+            email: 'joko.demo@example.com',
+            name: 'Pak Joko Demo',
+            role: 'ortu',
+            extra: ['phone' => '081200000002'],
+        );
+
+        $budi = User::query()->where('username', '0099000001')->firstOrFail();
+        $siti = User::query()->where('username', '0099000002')->firstOrFail();
+
+        GuardianLink::query()->updateOrCreate(
+            ['guardian_id' => $mother->id, 'student_id' => $budi->id],
+            [
+                'relationship' => 'ibu',
+                'status' => GuardianLink::APPROVED,
+                'reviewed_by' => $admin->id,
+                'reviewed_at' => now(),
+            ],
+        );
+
+        // firstOrCreate: kalau permintaan ini sudah diputuskan saat demo, seeder
+        // yang dijalankan ulang tidak mengembalikannya ke status menunggu.
+        GuardianLink::query()->firstOrCreate(
+            ['guardian_id' => $father->id, 'student_id' => $siti->id],
+            ['relationship' => 'ayah', 'status' => GuardianLink::PENDING],
+        );
     }
 
     /**

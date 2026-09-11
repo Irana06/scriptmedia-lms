@@ -61,6 +61,13 @@ class UserFactory extends Factory
         });
     }
 
+    public function guardian(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->assignRole(Role::findOrCreate('ortu'));
+        });
+    }
+
     public function student(bool $mustChangePassword = true): static
     {
         return $this

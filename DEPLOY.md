@@ -75,6 +75,18 @@ Semua akun demo memakai password `Demo12345!`. Salah satu guru, Pak Iwan Demo, s
 dibuat tanpa email dan masuk memakai username `iwan.demo` — untuk memperlihatkan alur guru
 sekolah swasta yang tidak punya email.
 
+Akun orang tua demo: `ortu.demo@example.com` (Ibu Sri Demo) sudah tertaut ke Budi Santoso,
+dan `joko.demo@example.com` (Pak Joko Demo) punya permintaan tautan ke Siti Aisyah yang
+**sengaja dibiarkan menunggu**, supaya alur persetujuan di menu admin *Orang Tua* bisa
+didemokan. Menjalankan ulang seeder tidak mengembalikan permintaan yang sudah diputuskan.
+
+## Sebelum deploy
+
+- **Cek `DB_CONNECTION` di `.env` server** (`grep DB_CONNECTION ~/school/lms-engine/.env`).
+  Server memakai MySQL.
+- Migrasi `2026_09_11_000000_create_guardian_student_table` menambah tabel tautan orang tua
+  dan kolom `phone` di `users`. Wajib dijalankan sebelum halaman orang tua dibuka.
+
 Tombol masuk sekali klik di halaman depan muncul hanya bila `APP_DEMO_MODE=true` di `.env`.
 **Matikan sebelum sekolah memasukkan data sungguhan** — tombol itu memberi akses admin penuh
 kepada siapa pun yang membuka halaman depan.

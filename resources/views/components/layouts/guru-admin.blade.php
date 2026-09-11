@@ -62,6 +62,14 @@
                                 <flux:icon.identification class="size-5" />
                                 Data Guru
                             </a>
+                            <a href="{{ route('admin.guardians.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.guardians.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.guardians.*'),
+                            ]) wire:navigate>
+                                <flux:icon.home-modern class="size-5" />
+                                Orang Tua
+                            </a>
                             <a href="{{ route('admin.academic.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
                                 'bg-white/12 font-semibold text-white' => request()->routeIs('admin.academic.*'),

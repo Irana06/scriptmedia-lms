@@ -12,6 +12,7 @@ use App\Models\Grade;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Support\SchoolDay;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -78,7 +79,7 @@ class RoleDashboardController extends Controller
 
     private function todayName(): string
     {
-        return ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'][now()->format('l')];
+        return SchoolDay::today();
     }
 
     /** @return Collection<int, CalendarEvent> */

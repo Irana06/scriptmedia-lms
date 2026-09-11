@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\ReportCardController;
 use App\Http\Controllers\Auth\DemoLoginController;
+use App\Http\Controllers\Auth\GuardianRegistrationController;
 use App\Http\Controllers\Auth\RequiredPasswordController;
 use App\Http\Controllers\Auth\StudentLoginController;
 use App\Http\Controllers\DashboardRedirectController;
@@ -13,8 +14,10 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
+use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Admin\ReportCards;
 use App\Livewire\CommunicationManager;
+use App\Livewire\Guardian\GuardianHome;
 use App\Livewire\Student\ActivityCenter;
 use App\Livewire\Student\EvaluationSummary;
 use App\Livewire\Student\LearningCenter;
@@ -28,12 +31,18 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware('guest')->group(function () {
     Route::post('demo/login/{role}', DemoLoginController::class)
         ->middleware('throttle:10,1')
-        ->whereIn('role', ['admin', 'guru', 'siswa'])
+        ->whereIn('role', ['admin', 'guru', 'siswa', 'ortu'])
         ->name('demo.login');
     Route::get('siswa/login', [StudentLoginController::class, 'create'])->name('siswa.login');
     Route::post('siswa/login', [StudentLoginController::class, 'store'])
         ->middleware('throttle:student-login')
         ->name('siswa.login.store');
+
+    Route::view('ortu/masuk', 'auth.ortu-masuk')->name('ortu.login');
+    Route::get('ortu/daftar', [GuardianRegistrationController::class, 'create'])->name('ortu.register');
+    Route::post('ortu/daftar', [GuardianRegistrationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('ortu.register.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -53,6 +62,12 @@ Route::middleware('auth')->group(function () {
         Route::livewire('siswa/kuis/{quiz}', QuizPlayer::class)->name('student.quizzes.play');
         Route::livewire('siswa/nilai', EvaluationSummary::class)->name('student.evaluation.index');
     });
+
+    // Orang tua tidak diwajibkan verifikasi email: yang menjaga data anak adalah
+    // persetujuan tautan oleh admin, bukan kepemilikan alamat email.
+    Route::livewire('ortu', GuardianHome::class)
+        ->middleware('role:ortu')
+        ->name('dashboard.ortu');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -71,6 +86,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::livewire('admin/orang-tua', GuardianManager::class)
+        ->middleware('role:admin')
+        ->name('admin.guardians.index');
     Route::get('dashboard/guru', [RoleDashboardController::class, 'teacher'])
         ->middleware('role:guru')
         ->name('dashboard.guru');

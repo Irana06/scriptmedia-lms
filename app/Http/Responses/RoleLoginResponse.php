@@ -21,6 +21,7 @@ class RoleLoginResponse implements LoginResponseContract
         $route = match (true) {
             $user?->hasRole('admin') => 'dashboard.admin',
             $user?->hasRole('guru') => 'dashboard.guru',
+            $user?->hasRole('ortu') => 'dashboard.ortu',
             $user?->must_change_password === true => 'siswa.password.required',
             default => 'dashboard.siswa',
         };

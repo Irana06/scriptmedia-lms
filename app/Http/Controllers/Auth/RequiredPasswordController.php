@@ -33,6 +33,7 @@ class RequiredPasswordController extends Controller
         $route = match (true) {
             $request->user()->hasRole('admin') => 'dashboard.admin',
             $request->user()->hasRole('guru') => 'dashboard.guru',
+            $request->user()->hasRole('ortu') => 'dashboard.ortu',
             default => 'dashboard.siswa',
         };
 
