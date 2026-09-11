@@ -49,6 +49,23 @@ Kalau subfoldernya bukan `/lms`, sesuaikan flag `--base` di `package.json`.
 Melewatkan langkah ini menghasilkan font 404 dari `/build/assets/...` — perhatikan tidak
 adanya prefiks `/lms`.
 
+## Cara cepat
+
+Setelah kode baru ada di server, satu perintah menjalankan semua langkah di bawah dengan
+urutan yang benar:
+
+```bash
+PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
+```
+
+Tambahkan `--demo` untuk sekalian menjalankan `DemoSeeder`. Skrip ini berhenti sebelum
+migrasi bila `DB_CONNECTION` bukan `mysql`, menghapus cache route yang tertinggal,
+memperingatkan bila aset tidak di-build untuk `/lms`, dan memeriksa halaman depan menjawab
+200 di akhir.
+
+`PHP84=$PHP84` di depan perintah memastikan skrip memakai PHP 8.4 walau variabel itu tidak
+di-export di shell.
+
 ## Urutan rilis
 
 ```bash

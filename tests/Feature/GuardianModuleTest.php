@@ -307,4 +307,25 @@ class GuardianModuleTest extends TestCase
             ])
             ->assertRedirect(route('dashboard.ortu'));
     }
+
+    public function test_admin_dashboard_announces_pending_parent_requests_only_when_there_are_some(): void
+    {
+        [$student] = $this->studentInClass();
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard.admin'))
+            ->assertOk()
+            ->assertDontSee('permintaan orang tua menunggu persetujuan');
+
+        $this->guardianOf($student, GuardianLink::PENDING);
+        $this->guardianOf($student, GuardianLink::PENDING);
+        $this->guardianOf($student);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard.admin'))
+            ->assertOk()
+            ->assertSee('2 permintaan orang tua menunggu persetujuan')
+            ->assertSee(route('admin.guardians.index'), false);
+    }
 }

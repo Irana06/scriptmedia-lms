@@ -9,6 +9,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\CalendarEvent;
 use App\Models\ClassSubject;
 use App\Models\Grade;
+use App\Models\GuardianLink;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\User;
@@ -26,6 +27,7 @@ class RoleDashboardController extends Controller
             'studentCount' => User::query()->whereHas('roles', fn ($query) => $query->where('name', 'siswa'))->count(),
             'teacherCount' => User::query()->whereHas('roles', fn ($query) => $query->where('name', 'guru'))->count(),
             'activeClassCount' => SchoolClass::query()->whereHas('academicYear', fn ($query) => $query->where('is_active', true))->count(),
+            'pendingGuardianRequests' => GuardianLink::query()->pending()->count(),
             'announcements' => Announcement::query()->with('schoolClass', 'creator')->latest()->limit(5)->get(),
             'events' => $this->events(),
         ]);
