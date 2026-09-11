@@ -97,6 +97,37 @@ class EvaluationWorkflowTest extends TestCase
         $this->assertDatabaseHas('attendances', ['student_id' => $students[1]->id, 'status' => 'izin']);
     }
 
+    public function test_teacher_can_correct_attendance_saved_earlier_the_same_day(): void
+    {
+        [$teacher, $students, $classSubject] = $this->evaluationContext();
+
+        $this->actingAs($teacher);
+        $component = Livewire::test(EvaluationManager::class)
+            ->set('tab', 'attendance')
+            ->set('attendanceClassId', (string) $classSubject->class_id)
+            ->set('attendanceDate', '2026-09-03')
+            ->set('statuses', [
+                $students[0]->id => 'hadir',
+                $students[1]->id => 'alpa',
+                $students[2]->id => 'hadir',
+            ])
+            ->call('saveAttendance')
+            ->assertHasNoErrors();
+
+        // Guru mengoreksi: siswa kedua ternyata izin, bukan alpa.
+        $component
+            ->set('statuses', [
+                $students[0]->id => 'hadir',
+                $students[1]->id => 'izin',
+                $students[2]->id => 'hadir',
+            ])
+            ->call('saveAttendance')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseCount('attendances', 3);
+        $this->assertSame('izin', Attendance::query()->where('student_id', $students[1]->id)->value('status'));
+    }
+
     public function test_student_sees_only_their_evaluation_summary(): void
     {
         [, $students, $classSubject, $semester] = $this->evaluationContext();

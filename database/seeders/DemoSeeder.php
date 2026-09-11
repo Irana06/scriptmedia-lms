@@ -466,8 +466,12 @@ class DemoSeeder extends Seeder
                         continue;
                     }
 
+                    // Cari dengan objek tanggal, bukan teks "Y-m-d". Cast "date" menyimpan
+                    // "Y-m-d 00:00:00", dan SQLite membandingkan tanggal sebagai teks —
+                    // pencarian memakai "Y-m-d" tidak pernah menemukan baris lama, sehingga
+                    // seeder gagal saat dijalankan ulang.
                     Attendance::query()->updateOrCreate(
-                        ['class_id' => $class->id, 'student_id' => $student->id, 'date' => $date->toDateString()],
+                        ['class_id' => $class->id, 'student_id' => $student->id, 'date' => $date->startOfDay()],
                         ['status' => $statuses[($student->id + $day) % count($statuses)]],
                     );
                 }

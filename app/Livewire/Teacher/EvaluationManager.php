@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Services\FinalGradeService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -128,8 +129,11 @@ class EvaluationManager extends Component
                 if (! in_array((int) $studentId, $studentIds, true)) {
                     continue;
                 }
+                // Objek tanggal, bukan teks "Y-m-d": cast "date" menyimpan "Y-m-d 00:00:00",
+                // dan di SQLite pencarian memakai teks tidak menemukan baris lama, sehingga
+                // menyimpan ulang presensi di hari yang sama gagal karena data ganda.
                 Attendance::query()->updateOrCreate(
-                    ['class_id' => $class->id, 'student_id' => $studentId, 'date' => $validated['attendanceDate']],
+                    ['class_id' => $class->id, 'student_id' => $studentId, 'date' => Carbon::parse($validated['attendanceDate'])->startOfDay()],
                     ['status' => $status],
                 );
             }
