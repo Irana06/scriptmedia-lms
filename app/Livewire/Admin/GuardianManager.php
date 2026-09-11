@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\ResetAccountPassword;
 use App\Models\GuardianLink;
 use App\Models\User;
 use App\Support\StudentLookup;
@@ -59,6 +60,28 @@ class GuardianManager extends Component
         // StudentAccess memeriksa tautan di setiap request, jadi akses berhenti
         // saat itu juga, termasuk untuk sesi orang tua yang masih terbuka.
         session()->flash('guardian_admin_status', "Tautan {$link->guardian->name} ke {$link->student->name} diputus.");
+    }
+
+    public function resetPassword(int $guardianId): void
+    {
+        $admin = $this->authorizeAdmin();
+        $this->createdCredentials = null;
+
+        // Bukan User::role('ortu'): scope itu melempar exception bila peran ortu
+        // belum pernah dibuat, misalnya di server lama sebelum ada orang tua.
+        $guardian = User::query()->findOrFail($guardianId);
+        abort_unless($guardian->hasRole('ortu'), 404);
+        $password = app(ResetAccountPassword::class)->handle($guardian, $admin);
+
+        // Orang tua yang ditambahkan tanpa email tidak bisa memakai tautan lupa
+        // password, jadi admin yang menyampaikan password baru secara langsung.
+        $this->createdCredentials = [
+            'name' => $guardian->name,
+            'login' => $guardian->username ?? $guardian->email,
+            'password' => $password,
+        ];
+
+        session()->flash('guardian_admin_status', "Password {$guardian->name} direset. Password baru hanya ditampilkan sekali.");
     }
 
     public function createGuardian(): void

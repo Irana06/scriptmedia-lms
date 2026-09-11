@@ -143,7 +143,10 @@
                             </td>
                             <td class="px-5 py-4 text-sm text-ink-soft">{{ $link->reviewed_at?->translatedFormat('d M Y') }}</td>
                             <td class="px-5 py-4 text-right sm:px-6">
-                                <button type="button" wire:click="revoke({{ $link->id }})" wire:confirm="Putuskan tautan ini? Orang tua tidak akan bisa melihat data anak lagi." class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-soft transition hover:border-red-300 hover:text-red-700">Putuskan</button>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" wire:click="resetPassword({{ $link->guardian_id }})" wire:confirm="Reset password {{ $link->guardian->name }}? Password lama tidak berlaku lagi." class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-navy transition hover:border-tosca hover:text-tosca-ink">Reset password</button>
+                                    <button type="button" wire:click="revoke({{ $link->id }})" wire:confirm="Putuskan tautan ini? Orang tua tidak akan bisa melihat data anak lagi." class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-soft transition hover:border-red-300 hover:text-red-700">Putuskan</button>
+                                </div>
                             </td>
                         </tr>
                     @empty

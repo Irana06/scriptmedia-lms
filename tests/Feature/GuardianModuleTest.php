@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\ResetAccountPassword;
 use App\Auth\StudentAccess;
 use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Guardian\GuardianHome;
@@ -17,7 +18,9 @@ use App\Models\Semester;
 use App\Models\Subject;
 use App\Models\User;
 use App\Support\SchoolDay;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -327,5 +330,58 @@ class GuardianModuleTest extends TestCase
             ->assertOk()
             ->assertSee('2 permintaan orang tua menunggu persetujuan')
             ->assertSee(route('admin.guardians.index'), false);
+    }
+
+    public function test_admin_can_reset_the_password_of_a_parent_without_email(): void
+    {
+        [$student] = $this->studentInClass();
+        $admin = User::factory()->admin()->create();
+        $guardian = $this->guardianOf($student);
+        $guardian->forceFill([
+            'username' => 'pak.joko',
+            'email' => 'pak.joko@ortu.invalid',
+            'must_change_password' => false,
+        ])->save();
+
+        $component = Livewire::actingAs($admin)
+            ->test(GuardianManager::class)
+            ->assertSee('Reset password')
+            ->call('resetPassword', $guardian->id)
+            ->assertHasNoErrors()
+            ->assertSet('createdCredentials.login', 'pak.joko');
+
+        $password = $component->get('createdCredentials')['password'];
+        $guardian->refresh();
+
+        $this->assertTrue(Hash::check($password, $guardian->password));
+        $this->assertTrue($guardian->must_change_password);
+        $this->assertDatabaseHas('password_reset_logs', [
+            'user_id' => $guardian->id,
+            'reset_by_user_id' => $admin->id,
+        ]);
+    }
+
+    public function test_teachers_cannot_reset_parent_passwords(): void
+    {
+        [$student] = $this->studentInClass();
+        $teacher = User::factory()->teacher()->create();
+        $guardian = $this->guardianOf($student);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(ResetAccountPassword::class)->handle($guardian, $teacher);
+    }
+
+    public function test_parent_password_reset_only_accepts_parent_accounts(): void
+    {
+        [$student] = $this->studentInClass();
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(GuardianManager::class)
+            ->call('resetPassword', $student->id)
+            ->assertNotFound();
+
+        $this->assertDatabaseCount('password_reset_logs', 0);
     }
 }

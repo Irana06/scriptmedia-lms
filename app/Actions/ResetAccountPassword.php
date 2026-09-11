@@ -13,9 +13,9 @@ class ResetAccountPassword
     /**
      * Reset password sebuah akun dan kembalikan password baru tepat satu kali.
      *
-     * Admin boleh mereset siswa dan guru; guru hanya boleh mereset siswa.
-     * Akun admin tidak pernah direset lewat jalur ini, dan tidak ada yang
-     * mereset akunnya sendiri — itu tugas halaman keamanan akun.
+     * Admin boleh mereset siswa, guru, dan orang tua; guru hanya boleh mereset
+     * siswa. Akun admin tidak pernah direset lewat jalur ini, dan tidak ada
+     * yang mereset akunnya sendiri — itu tugas halaman keamanan akun.
      *
      * @throws AuthorizationException
      */
@@ -25,6 +25,7 @@ class ResetAccountPassword
             $actor->is($target), $target->hasRole('admin') => false,
             $target->hasRole('siswa') => $actor->hasAnyRole(['admin', 'guru']),
             $target->hasRole('guru') => $actor->hasRole('admin'),
+            $target->hasRole('ortu') => $actor->hasRole('admin'),
             default => false,
         };
 
