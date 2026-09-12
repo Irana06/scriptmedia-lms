@@ -63,7 +63,7 @@
                                 </a>
                                 <a href="{{ route('ortu.login') }}" class="group flex min-h-20 items-center gap-4 rounded-2xl border border-line p-4 transition hover:border-tosca hover:bg-tosca-tint/40">
                                     <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-tosca text-navy"><flux:icon.home-modern class="size-5" /></span>
-                                    <span class="min-w-0 flex-1"><strong class="block text-navy">Orang tua & wali</strong><span class="mt-1 block text-sm text-ink-soft">Pantau jadwal dan kehadiran anak</span></span>
+                                    <span class="min-w-0 flex-1"><strong class="block text-navy">Orang tua & wali</strong><span class="mt-1 block text-sm text-ink-soft">Pantau aktivitas, jadwal, dan perkembangan anak</span></span>
                                     <flux:icon.arrow-right class="size-5 text-tosca transition group-hover:translate-x-1" />
                                 </a>
                             @endauth

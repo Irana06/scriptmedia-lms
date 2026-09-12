@@ -7,6 +7,7 @@ use App\Models\Announcement;
 use App\Models\Assignment;
 use App\Models\Attendance;
 use App\Models\CalendarEvent;
+use App\Models\Grade;
 use App\Models\GuardianLink;
 use App\Models\Quiz;
 use App\Models\Schedule;
@@ -160,8 +161,9 @@ class GuardianHome extends Component
     }
 
     /**
-     * Ringkasan hanya-baca untuk orang tua. Nilai dan catatan guru sengaja
-     * tidak disertakan pada tahap ini.
+     * Ringkasan hanya-baca untuk orang tua: aktivitas, jadwal, dan perkembangan
+     * belajar anak, termasuk nilai dan catatan guru. Tidak ada aksi di sini —
+     * orang tua tidak pernah mengumpulkan tugas atau mengerjakan kuis.
      *
      * @return array<string, mixed>
      */
@@ -205,21 +207,36 @@ class GuardianHome extends Component
             'attendanceCounts' => collect(['hadir', 'izin', 'sakit', 'alpa'])
                 ->mapWithKeys(fn (string $status): array => [$status => $attendance->where('status', $status)->count()])
                 ->all(),
+            'attendanceRate' => $attendance->isNotEmpty()
+                ? (int) round($attendance->where('status', 'hadir')->count() / $attendance->count() * 100)
+                : null,
             'attendanceRecords' => $attendance->take(10),
+            // Nilai akhir yang sudah diterbitkan guru untuk semester berjalan.
+            'grades' => $semester !== null
+                ? Grade::query()
+                    ->with('classSubject.subject')
+                    ->where('student_id', $student->id)
+                    ->where('semester_id', $semester->id)
+                    ->get()
+                : collect(),
             'assignments' => Assignment::query()
-                ->with('classSubject.subject')
+                ->with([
+                    'classSubject.subject',
+                    'submissions' => fn ($query) => $query->where('student_id', $student->id)->with('grade'),
+                ])
                 ->whereHas('classSubject', fn (Builder $query): Builder => $query->whereIn('class_id', $classIds))
                 ->whereBetween('deadline', [now()->subDays(14), now()->addDays(14)])
-                ->withExists(['submissions as submitted' => fn (Builder $query): Builder => $query->where('student_id', $student->id)])
                 ->orderBy('deadline')
                 ->limit(12)
                 ->get(),
             'quizzes' => Quiz::query()
-                ->with('classSubject.subject')
+                ->with([
+                    'classSubject.subject',
+                    'attempts' => fn ($query) => $query->where('student_id', $student->id)->whereNotNull('submitted_at'),
+                ])
                 ->whereHas('classSubject', fn (Builder $query): Builder => $query->whereIn('class_id', $classIds))
                 ->where('close_at', '>=', now()->subDays(14))
                 ->where('open_at', '<=', now()->addDays(14))
-                ->withExists(['attempts as completed' => fn (Builder $query): Builder => $query->where('student_id', $student->id)->whereNotNull('submitted_at')])
                 ->orderBy('close_at')
                 ->limit(8)
                 ->get(),

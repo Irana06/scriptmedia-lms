@@ -57,7 +57,7 @@
                                 <td class="px-5 py-4 text-sm text-ink-soft">{{ ucfirst((string) $link->relationship) }}</td>
                                 <td class="px-5 py-4 text-right sm:px-6">
                                     <div class="flex justify-end gap-2">
-                                        <button type="button" wire:click="approve({{ $link->id }})" wire:confirm="Setujui tautan ini? Orang tua akan bisa melihat jadwal, kehadiran, dan tugas anak." class="rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white transition hover:bg-navy-mid">Setujui</button>
+                                        <button type="button" wire:click="approve({{ $link->id }})" wire:confirm="Setujui tautan ini? Orang tua akan bisa melihat jadwal, kehadiran, tugas, dan nilai anak." class="rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white transition hover:bg-navy-mid">Setujui</button>
                                         <button type="button" wire:click="reject({{ $link->id }})" wire:confirm="Tolak permintaan ini?" class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-soft transition hover:border-red-300 hover:text-red-700">Tolak</button>
                                     </div>
                                 </td>

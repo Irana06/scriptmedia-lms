@@ -6,7 +6,7 @@
             </span>
             <div>
                 <p class="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-tosca-ink">Portal orang tua</p>
-                <x-auth-header title="Selamat datang" description="Masuk untuk memantau jadwal, kehadiran, dan tugas anak." />
+                <x-auth-header title="Selamat datang" description="Masuk untuk memantau aktivitas, jadwal, dan perkembangan anak." />
             </div>
         </div>
 

@@ -8,10 +8,14 @@ use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Guardian\GuardianHome;
 use App\Models\AcademicYear;
 use App\Models\Assignment;
+use App\Models\AssignmentGrade;
+use App\Models\AssignmentSubmission;
 use App\Models\Attendance;
 use App\Models\ClassSubject;
 use App\Models\Grade;
 use App\Models\GuardianLink;
+use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\Semester;
@@ -150,7 +154,7 @@ class GuardianModuleTest extends TestCase
         $this->assertDatabaseCount('guardian_student', 0);
     }
 
-    public function test_approved_parent_sees_schedule_attendance_and_tasks_but_no_grades(): void
+    public function test_approved_parent_sees_activities_schedule_and_progress(): void
     {
         [$student, $classSubject, $semester] = $this->studentInClass();
         $guardian = $this->guardianOf($student);
@@ -164,6 +168,12 @@ class GuardianModuleTest extends TestCase
         Attendance::query()->create([
             'class_id' => $classSubject->class_id,
             'student_id' => $student->id,
+            'date' => today()->subDay(),
+            'status' => 'hadir',
+        ]);
+        Attendance::query()->create([
+            'class_id' => $classSubject->class_id,
+            'student_id' => $student->id,
             'date' => today(),
             'status' => 'izin',
         ]);
@@ -172,6 +182,37 @@ class GuardianModuleTest extends TestCase
             'title' => 'Latihan Pecahan',
             'description' => 'Lima soal.',
             'deadline' => now()->addDays(3),
+        ]);
+        $gradedAssignment = Assignment::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => 'Ringkasan Bab Satu',
+            'description' => 'Satu halaman.',
+            'deadline' => now()->subDays(2),
+        ]);
+        $submission = AssignmentSubmission::query()->create([
+            'assignment_id' => $gradedAssignment->id,
+            'student_id' => $student->id,
+            'file_path' => 'learning/submissions/ringkasan.pdf',
+            'submitted_at' => now()->subDays(3),
+        ]);
+        AssignmentGrade::query()->create([
+            'submission_id' => $submission->id,
+            'score' => 88.5,
+            'feedback' => 'Langkah pengerjaannya sudah runtut.',
+        ]);
+        $quiz = Quiz::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => 'Kuis Pecahan',
+            'duration_minutes' => 20,
+            'open_at' => now()->subDays(2),
+            'close_at' => now()->addDays(2),
+        ]);
+        QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'student_id' => $student->id,
+            'started_at' => now()->subDay(),
+            'submitted_at' => now()->subDay(),
+            'score' => 75,
         ]);
         Grade::query()->create([
             'student_id' => $student->id,
@@ -187,10 +228,15 @@ class GuardianModuleTest extends TestCase
             ->assertSee('Matematika 0012345678')
             ->assertSee('Latihan Pecahan')
             ->assertSee('Belum dikumpulkan')
-            ->assertDontSee('91.25')
-            ->assertDontSee('91,25')
+            ->assertSee('Ringkasan Bab Satu')
+            ->assertSee('Nilai 88,5')
+            ->assertSee('Langkah pengerjaannya sudah runtut.')
+            ->assertSee('Kuis Pecahan')
+            ->assertSee('Skor 75')
+            ->assertSee('91,25')
             ->assertViewHas('overview', fn (array $overview): bool => $overview['attendanceCounts']['izin'] === 1
-                && ! array_key_exists('grades', $overview));
+                && $overview['attendanceRate'] === 50
+                && $overview['grades']->count() === 1);
     }
 
     public function test_parent_cannot_select_a_child_they_are_not_linked_to(): void

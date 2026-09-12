@@ -51,17 +51,25 @@ adanya prefiks `/lms`.
 
 ## Cara cepat
 
-Setelah kode baru ada di server, satu perintah menjalankan semua langkah di bawah dengan
-urutan yang benar:
+Kode sampai ke server lewat `git pull`. Alurnya:
+
+1. Di PC lokal, gabungkan pekerjaan ke `master` lalu `git push origin master`.
+2. Di server, satu perintah ini menarik kode terbaru dan menjalankan semua langkah di bawah
+   dengan urutan yang benar:
 
 ```bash
 PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
 ```
 
-Tambahkan `--demo` untuk sekalian menjalankan `DemoSeeder`. Skrip ini berhenti sebelum
-migrasi bila `DB_CONNECTION` bukan `mysql`, menghapus cache route yang tertinggal,
-memperingatkan bila aset tidak di-build untuk `/lms`, dan memeriksa halaman depan menjawab
-200 di akhir.
+Tambahkan `--demo` untuk sekalian menjalankan `DemoSeeder`, atau `--no-pull` bila kode sudah
+diperbarui manual. Skrip ini:
+
+- menolak `git pull` bila ada file yang diubah langsung di server, supaya tidak bentrok;
+- menjalankan ulang dirinya setelah pull, karena skrip ini sendiri bisa ikut berubah;
+- menjalankan `composer install --no-dev` hanya bila `composer.lock` berubah;
+- berhenti sebelum migrasi bila `DB_CONNECTION` bukan `mysql`;
+- menghapus cache route yang tertinggal dan memperingatkan bila aset tidak di-build untuk `/lms`;
+- memeriksa halaman depan menjawab 200 di akhir.
 
 `PHP84=$PHP84` di depan perintah memastikan skrip memakai PHP 8.4 walau variabel itu tidak
 di-export di shell.
