@@ -27,6 +27,7 @@
                 'assignments' => ['4', 'Guru pengampu'],
                 'students' => ['5', 'Siswa'],
                 'schedules' => ['6', 'Jadwal'],
+                'weights' => ['7', 'Bobot nilai'],
             ] as $key => [$number, $label])
                 <button
                     type="button"
@@ -183,6 +184,22 @@
                     </div></section>
                 @endforeach
             </div></div>
+        </div>
+    @elseif ($tab === 'weights')
+        <div class="mt-6 max-w-xl">
+            <x-theme.card>
+                <h2 class="text-lg">Bobot nilai akhir</h2>
+                <p class="mt-1 text-sm text-ink-soft">Dipakai untuk menghitung nilai akhir otomatis di halaman Nilai &amp; Presensi guru. Total keempat bobot harus 100%.</p>
+                <form wire:submit="saveGradeWeights" class="mt-5 grid grid-cols-2 gap-4">
+                    <label class="block text-sm font-semibold text-navy">Tugas (%)<input wire:model="weightTugas" type="number" min="0" max="100" step="0.1" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                    <label class="block text-sm font-semibold text-navy">Kuis (%)<input wire:model="weightKuis" type="number" min="0" max="100" step="0.1" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                    <label class="block text-sm font-semibold text-navy">UTS (%)<input wire:model="weightUts" type="number" min="0" max="100" step="0.1" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                    <label class="block text-sm font-semibold text-navy">UAS (%)<input wire:model="weightUas" type="number" min="0" max="100" step="0.1" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                    @error('weightTugas') <p class="col-span-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                    <x-theme.button type="submit" class="col-span-2">Simpan bobot</x-theme.button>
+                </form>
+                <p class="mt-4 text-xs text-ink-soft">Kategori tanpa nilai sama sekali (misal kelas tidak pernah kuis) otomatis tidak dihitung, dan bobotnya dibagi ke kategori lain yang terisi — nilai akhir tetap dari 100%.</p>
+            </x-theme.card>
         </div>
     @endif
 </div>

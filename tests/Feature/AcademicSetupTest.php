@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Admin\AcademicSetup;
 use App\Models\AcademicYear;
 use App\Models\ClassSubject;
+use App\Models\GradeWeightSetting;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\Subject;
@@ -30,6 +31,43 @@ class AcademicSetupTest extends TestCase
         $this->actingAs($teacher)
             ->get(route('admin.academic.index'))
             ->assertForbidden();
+    }
+
+    public function test_admin_can_change_grade_weights_when_they_total_100(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+        Livewire::test(AcademicSetup::class)
+            ->set('tab', 'weights')
+            ->set('weightTugas', '30')
+            ->set('weightKuis', '10')
+            ->set('weightUts', '25')
+            ->set('weightUas', '35')
+            ->call('saveGradeWeights')
+            ->assertHasNoErrors();
+
+        $weights = GradeWeightSetting::current();
+        $this->assertSame(30.0, (float) $weights->tugas);
+        $this->assertSame(10.0, (float) $weights->kuis);
+    }
+
+    public function test_grade_weights_must_total_100(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+        Livewire::test(AcademicSetup::class)
+            ->set('tab', 'weights')
+            ->set('weightTugas', '30')
+            ->set('weightKuis', '10')
+            ->set('weightUts', '25')
+            ->set('weightUas', '30')
+            ->call('saveGradeWeights')
+            ->assertHasErrors('weightTugas');
+
+        // Default masih 20/20/25/35, tidak berubah karena permintaan ditolak.
+        $this->assertSame(20.0, (float) GradeWeightSetting::current()->tugas);
     }
 
     public function test_admin_can_build_a_complete_academic_structure(): void

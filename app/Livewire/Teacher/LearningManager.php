@@ -56,6 +56,8 @@ class LearningManager extends Component
 
     public string $assignmentTitle = '';
 
+    public string $assignmentCategory = 'tugas';
+
     public string $assignmentDescription = '';
 
     public string $assignmentDeadline = '';
@@ -67,6 +69,8 @@ class LearningManager extends Component
     public ?int $gradingSubmissionId = null;
 
     public string $quizTitle = '';
+
+    public string $quizCategory = 'kuis';
 
     public string $quizDuration = '30';
 
@@ -178,16 +182,19 @@ class LearningManager extends Component
         $this->selectedAssignment();
         $validated = $this->validate([
             'assignmentTitle' => ['required', 'string', 'max:255'],
+            'assignmentCategory' => ['required', Rule::in(Assignment::CATEGORIES)],
             'assignmentDescription' => ['nullable', 'string', 'max:5000'],
             'assignmentDeadline' => ['required', 'date', 'after:now'],
         ]);
         Assignment::query()->create([
             'class_subject_id' => $this->classSubjectId,
             'title' => $validated['assignmentTitle'],
+            'category' => $validated['assignmentCategory'],
             'description' => $validated['assignmentDescription'] ?: null,
             'deadline' => $validated['assignmentDeadline'],
         ]);
         $this->reset('assignmentTitle', 'assignmentDescription', 'assignmentDeadline');
+        $this->assignmentCategory = 'tugas';
         session()->flash('learning_status', 'Tugas berhasil dibuat.');
     }
 
@@ -235,6 +242,7 @@ class LearningManager extends Component
         $this->selectedAssignment();
         $validated = $this->validate([
             'quizTitle' => ['required', 'string', 'max:255'],
+            'quizCategory' => ['required', Rule::in(Quiz::CATEGORIES)],
             'quizDuration' => ['required', 'integer', 'min:1', 'max:240'],
             'quizOpenAt' => ['required', 'date'],
             'quizCloseAt' => ['required', 'date', 'after:quizOpenAt'],
@@ -242,12 +250,14 @@ class LearningManager extends Component
         Quiz::query()->create([
             'class_subject_id' => $this->classSubjectId,
             'title' => $validated['quizTitle'],
+            'category' => $validated['quizCategory'],
             'duration_minutes' => $validated['quizDuration'],
             'open_at' => $validated['quizOpenAt'],
             'close_at' => $validated['quizCloseAt'],
         ]);
         $this->reset('quizTitle', 'quizOpenAt', 'quizCloseAt');
         $this->quizDuration = '30';
+        $this->quizCategory = 'kuis';
         session()->flash('learning_status', 'Kuis berhasil dibuat.');
     }
 

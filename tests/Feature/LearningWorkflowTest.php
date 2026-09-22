@@ -214,6 +214,44 @@ class LearningWorkflowTest extends TestCase
     }
 
     /** @return array{User, User, ClassSubject} */
+    public function test_teacher_can_categorize_assignment_and_quiz_as_uts_or_uas(): void
+    {
+        [$teacher, , $classSubject] = $this->learningContext();
+
+        $this->actingAs($teacher);
+        Livewire::test(LearningManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('assignmentTitle', 'Ujian Tengah Semester')
+            ->set('assignmentCategory', 'uts')
+            ->set('assignmentDeadline', now()->addDay()->format('Y-m-d\TH:i'))
+            ->call('saveAssignment')
+            ->assertHasNoErrors()
+            ->set('quizTitle', 'Ujian Akhir Semester')
+            ->set('quizCategory', 'uas')
+            ->set('quizDuration', '60')
+            ->set('quizOpenAt', now()->addDay()->format('Y-m-d\TH:i'))
+            ->set('quizCloseAt', now()->addDays(2)->format('Y-m-d\TH:i'))
+            ->call('saveQuiz')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('assignments', ['title' => 'Ujian Tengah Semester', 'category' => 'uts']);
+        $this->assertDatabaseHas('quizzes', ['title' => 'Ujian Akhir Semester', 'category' => 'uas']);
+    }
+
+    public function test_assignment_category_outside_the_allowed_list_is_rejected(): void
+    {
+        [$teacher, , $classSubject] = $this->learningContext();
+
+        $this->actingAs($teacher);
+        Livewire::test(LearningManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('assignmentTitle', 'Tugas Aneh')
+            ->set('assignmentCategory', 'kuis')
+            ->set('assignmentDeadline', now()->addDay()->format('Y-m-d\TH:i'))
+            ->call('saveAssignment')
+            ->assertHasErrors('assignmentCategory');
+    }
+
     private function learningContext(): array
     {
         $teacher = User::factory()->teacher()->create();

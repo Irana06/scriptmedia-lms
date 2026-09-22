@@ -11,6 +11,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\Attendance;
 use App\Models\ClassSubject;
 use App\Models\Grade;
+use App\Models\GradeWeightSetting;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\SchoolClass;
@@ -73,6 +74,62 @@ class EvaluationWorkflowTest extends TestCase
             'final_score' => 91,
             'predikat' => 'A',
         ]);
+    }
+
+    public function test_final_score_is_weighted_by_category(): void
+    {
+        [$teacher, $students, $classSubject, $semester] = $this->evaluationContext();
+        $student = $students[0];
+
+        // Bobot sekolah: tugas 20%, kuis 20%, UTS 25%, UAS 35%.
+        $this->createGradedAssignment($classSubject, $student, 'tugas', 80);
+        $this->createGradedAssignment($classSubject, $student, 'uts', 100);
+        $this->createGradedQuiz($classSubject, $student, 'kuis', 60);
+        $this->createGradedQuiz($classSubject, $student, 'uas', 40);
+
+        $this->actingAs($teacher);
+        // 80*0,20 + 60*0,20 + 100*0,25 + 40*0,35 = 16 + 12 + 25 + 14 = 67
+        Livewire::test(EvaluationManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('semesterId', (string) $semester->id)
+            ->call('autoFillScores')
+            ->assertSet("scores.{$student->id}", '67');
+    }
+
+    public function test_final_score_redistributes_weight_when_a_category_has_no_score(): void
+    {
+        [$teacher, $students, $classSubject, $semester] = $this->evaluationContext();
+        $student = $students[0];
+
+        // Tidak ada kuis maupun UAS di mapel ini: bobotnya (20 + 35) dibagi
+        // proporsional ke tugas (20) dan UTS (25) yang terisi.
+        $this->createGradedAssignment($classSubject, $student, 'tugas', 90);
+        $this->createGradedAssignment($classSubject, $student, 'uts', 70);
+
+        $this->actingAs($teacher);
+        // 90*(20/45) + 70*(25/45) = 40 + 38,89 = 78,89
+        Livewire::test(EvaluationManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('semesterId', (string) $semester->id)
+            ->call('autoFillScores')
+            ->assertSet("scores.{$student->id}", '78.89');
+    }
+
+    public function test_final_score_uses_custom_school_weights(): void
+    {
+        [$teacher, $students, $classSubject, $semester] = $this->evaluationContext();
+        $student = $students[0];
+        GradeWeightSetting::current()->update(['tugas' => 0, 'kuis' => 0, 'uts' => 0, 'uas' => 100]);
+
+        $this->createGradedAssignment($classSubject, $student, 'tugas', 50);
+        $this->createGradedQuiz($classSubject, $student, 'uas', 88);
+
+        $this->actingAs($teacher);
+        Livewire::test(EvaluationManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('semesterId', (string) $semester->id)
+            ->call('autoFillScores')
+            ->assertSet("scores.{$student->id}", '88');
     }
 
     public function test_teacher_saves_one_class_attendance_in_one_submit(): void
@@ -275,5 +332,41 @@ class EvaluationWorkflowTest extends TestCase
         ]);
 
         return [$teacher, $students, $classSubject, $semester];
+    }
+
+    private function createGradedAssignment(ClassSubject $classSubject, User $student, string $category, float $score): void
+    {
+        $assignment = Assignment::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => "Tugas {$category}",
+            'category' => $category,
+            'deadline' => '2026-09-10 12:00:00',
+        ]);
+        $submission = AssignmentSubmission::query()->create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'file_path' => 'testing/jawaban.pdf',
+            'submitted_at' => '2026-09-09 10:00:00',
+        ]);
+        AssignmentGrade::query()->create(['submission_id' => $submission->id, 'score' => $score]);
+    }
+
+    private function createGradedQuiz(ClassSubject $classSubject, User $student, string $category, float $score): void
+    {
+        $quiz = Quiz::query()->create([
+            'class_subject_id' => $classSubject->id,
+            'title' => "Kuis {$category}",
+            'category' => $category,
+            'duration_minutes' => 20,
+            'open_at' => '2026-09-15 08:00:00',
+            'close_at' => '2026-09-15 10:00:00',
+        ]);
+        QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'student_id' => $student->id,
+            'started_at' => '2026-09-15 08:00:00',
+            'submitted_at' => '2026-09-15 08:15:00',
+            'score' => $score,
+        ]);
     }
 }

@@ -88,6 +88,13 @@
                     <h2 class="text-xl">Buat tugas</h2>
                     <form wire:submit="saveAssignment" class="mt-5 space-y-4">
                         <label class="block text-sm font-semibold text-navy">Judul<input wire:model="assignmentTitle" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                        <label class="block text-sm font-semibold text-navy">Kategori
+                            <select wire:model="assignmentCategory" class="mt-2 min-h-11 w-full rounded-xl border border-line bg-white px-3 text-sm">
+                                <option value="tugas">Tugas</option>
+                                <option value="uts">UTS</option>
+                                <option value="uas">UAS</option>
+                            </select>
+                        </label>
                         <label class="block text-sm font-semibold text-navy">Instruksi<textarea wire:model="assignmentDescription" rows="4" class="mt-2 w-full rounded-xl border border-line px-3 py-2"></textarea></label>
                         <label class="block text-sm font-semibold text-navy">Deadline<input wire:model="assignmentDeadline" type="datetime-local" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         @error('assignmentDeadline') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -98,7 +105,7 @@
                     @forelse ($selected->assignments as $assignment)
                         <x-theme.card>
                             <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div><h3 class="text-lg">{{ $assignment->title }}</h3><p class="mt-1 text-sm text-ink-soft">Batas {{ $assignment->deadline->format('d M Y, H:i') }}</p></div>
+                                <div><h3 class="text-lg">{{ $assignment->title }}</h3><p class="mt-1 text-sm text-ink-soft">{{ strtoupper($assignment->category) }} · Batas {{ $assignment->deadline->format('d M Y, H:i') }}</p></div>
                                 <div class="flex items-center gap-3"><x-theme.badge tone="orange">{{ $assignment->submissions->count() }} kiriman</x-theme.badge><button wire:click="deleteAssignment({{ $assignment->id }})" wire:confirm="Hapus tugas dan seluruh kiriman?" class="text-sm text-red-600">Hapus</button></div>
                             </div>
                             <p class="mt-3 text-sm leading-6 text-ink-soft">{{ $assignment->description }}</p>
@@ -131,6 +138,13 @@
                     <h2 class="text-xl">Buat kuis</h2>
                     <form wire:submit="saveQuiz" class="mt-5 space-y-4">
                         <label class="block text-sm font-semibold text-navy">Judul<input wire:model="quizTitle" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
+                        <label class="block text-sm font-semibold text-navy">Kategori
+                            <select wire:model="quizCategory" class="mt-2 min-h-11 w-full rounded-xl border border-line bg-white px-3 text-sm">
+                                <option value="kuis">Kuis</option>
+                                <option value="uts">UTS</option>
+                                <option value="uas">UAS</option>
+                            </select>
+                        </label>
                         <label class="block text-sm font-semibold text-navy">Durasi (menit)<input wire:model="quizDuration" type="number" min="1" max="240" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         <label class="block text-sm font-semibold text-navy">Dibuka<input wire:model="quizOpenAt" type="datetime-local" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         <label class="block text-sm font-semibold text-navy">Ditutup<input wire:model="quizCloseAt" type="datetime-local" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
@@ -141,7 +155,7 @@
                 <div class="space-y-5">
                     @forelse ($selected->quizzes as $quiz)
                         <x-theme.card>
-                            <div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-lg">{{ $quiz->title }}</h3><p class="mt-1 text-sm text-ink-soft">{{ $quiz->duration_minutes }} menit · {{ $quiz->open_at->format('d M H:i') }}–{{ $quiz->close_at->format('d M H:i') }}</p></div><button wire:click="deleteQuiz({{ $quiz->id }})" wire:confirm="Hapus kuis ini?" class="text-sm text-red-600">Hapus</button></div>
+                            <div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-lg">{{ $quiz->title }}</h3><p class="mt-1 text-sm text-ink-soft">{{ strtoupper($quiz->category) }} · {{ $quiz->duration_minutes }} menit · {{ $quiz->open_at->format('d M H:i') }}–{{ $quiz->close_at->format('d M H:i') }}</p></div><button wire:click="deleteQuiz({{ $quiz->id }})" wire:confirm="Hapus kuis ini?" class="text-sm text-red-600">Hapus</button></div>
                             <div class="mt-5 space-y-3">
                                 @foreach ($quiz->questions as $question)
                                     <div class="rounded-2xl bg-offwhite p-4"><div class="flex justify-between gap-3"><p class="text-sm font-semibold text-navy">{{ $loop->iteration }}. {{ $question->question }}</p><button wire:click="deleteQuestion({{ $question->id }})" class="text-xs text-red-600">Hapus</button></div><x-theme.badge tone="neutral" class="mt-2">{{ $question->type === 'mc' ? 'Pilihan ganda' : 'Esai' }}</x-theme.badge></div>

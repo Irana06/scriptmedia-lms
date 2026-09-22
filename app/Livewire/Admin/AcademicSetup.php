@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\AcademicYear;
 use App\Models\ClassSubject;
+use App\Models\GradeWeightSetting;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\Semester;
@@ -84,8 +85,22 @@ class AcademicSetup extends Component
 
     public string $scheduleEndTime = '';
 
+    public string $weightTugas = '';
+
+    public string $weightKuis = '';
+
+    public string $weightUts = '';
+
+    public string $weightUas = '';
+
     public function mount(): void
     {
+        $weights = GradeWeightSetting::current();
+        $this->weightTugas = (string) $weights->tugas;
+        $this->weightKuis = (string) $weights->kuis;
+        $this->weightUts = (string) $weights->uts;
+        $this->weightUas = (string) $weights->uas;
+
         $activeYear = AcademicYear::query()->where('is_active', true)->first();
 
         if ($activeYear) {
@@ -103,7 +118,7 @@ class AcademicSetup extends Component
 
     public function switchTab(string $tab): void
     {
-        abort_unless(in_array($tab, ['years', 'classes', 'subjects', 'assignments', 'students', 'schedules'], true), 404);
+        abort_unless(in_array($tab, ['years', 'classes', 'subjects', 'assignments', 'students', 'schedules', 'weights'], true), 404);
         $this->tab = $tab;
         $this->resetValidation();
     }
@@ -398,6 +413,41 @@ class AcademicSetup extends Component
     public function updatedScheduleClassId(): void
     {
         $this->scheduleClassSubjectId = '';
+    }
+
+    public function saveGradeWeights(): void
+    {
+        $validated = $this->validate([
+            'weightTugas' => ['required', 'numeric', 'min:0', 'max:100'],
+            'weightKuis' => ['required', 'numeric', 'min:0', 'max:100'],
+            'weightUts' => ['required', 'numeric', 'min:0', 'max:100'],
+            'weightUas' => ['required', 'numeric', 'min:0', 'max:100'],
+        ], [], [
+            'weightTugas' => 'bobot tugas',
+            'weightKuis' => 'bobot kuis',
+            'weightUts' => 'bobot UTS',
+            'weightUas' => 'bobot UAS',
+        ]);
+
+        $total = (float) $validated['weightTugas'] + (float) $validated['weightKuis']
+            + (float) $validated['weightUts'] + (float) $validated['weightUas'];
+
+        // Ditotalkan ke satu digit desimal supaya 33,3 + 33,3 + 33,4 tidak ditolak
+        // gara-gara pembulatan floating point.
+        if (round($total, 1) !== 100.0) {
+            throw ValidationException::withMessages([
+                'weightTugas' => 'Total bobot harus 100%. Saat ini '.rtrim(rtrim(number_format($total, 1, ',', '.'), '0'), ',').'%.',
+            ]);
+        }
+
+        GradeWeightSetting::current()->update([
+            'tugas' => $validated['weightTugas'],
+            'kuis' => $validated['weightKuis'],
+            'uts' => $validated['weightUts'],
+            'uas' => $validated['weightUas'],
+        ]);
+
+        $this->notify('Bobot nilai akhir berhasil disimpan.');
     }
 
     public function render(): View
