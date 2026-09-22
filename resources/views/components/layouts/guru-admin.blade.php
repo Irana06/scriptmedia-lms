@@ -160,8 +160,8 @@
                         <flux:icon.bars-3 class="size-5" />
                     </button>
                     <div>
-                        <p class="text-xs text-ink-soft">SMA Nusantara</p>
-                        <p class="text-sm font-semibold text-navy">Tahun Ajaran 2026/2027</p>
+                        <p class="text-xs text-ink-soft">{{ $schoolName }}</p>
+                        <p class="text-sm font-semibold text-navy">{{ $activeYearLabel ? "Tahun Ajaran {$activeYearLabel}" : 'Belum ada tahun ajaran aktif' }}</p>
                     </div>
                     <div class="ml-auto flex items-center gap-2">
                         <a href="{{ route('communications.index') }}" class="relative rounded-xl border border-line bg-white p-2.5 text-ink-soft shadow-sm transition hover:border-tosca hover:text-navy" aria-label="Buka pengumuman dan kalender" wire:navigate>

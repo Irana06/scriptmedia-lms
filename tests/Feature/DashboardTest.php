@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SchoolProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,6 +27,17 @@ class DashboardTest extends TestCase
         $this->get(route('dashboard.admin'))
             ->assertOk()
             ->assertSee('Ringkasan sekolah');
+    }
+
+    public function test_admin_dashboard_shows_the_configured_school_name(): void
+    {
+        SchoolProfile::current()->update(['name' => 'SMK Digital Nusantara']);
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard.admin'))
+            ->assertSee('SMK Digital Nusantara')
+            ->assertDontSee('SMA Nusantara');
     }
 
     public function test_teacher_is_redirected_to_the_teacher_dashboard(): void

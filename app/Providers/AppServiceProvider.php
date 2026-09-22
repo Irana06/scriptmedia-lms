@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Http\Responses\RoleLoginResponse;
+use App\Models\AcademicYear;
 use App\Models\GuardianLink;
+use App\Models\SchoolProfile;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->shareAdminNavigationCounts();
+        $this->shareSchoolHeader();
     }
 
     /**
@@ -45,6 +48,18 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingGuardianCount', $user instanceof User && $user->hasRole('admin')
                 ? GuardianLink::query()->pending()->count()
                 : 0);
+        });
+    }
+
+    /**
+     * Nama sekolah dan tahun ajaran aktif di header, dulu tertulis tetap "SMA
+     * Nusantara" — salah untuk sekolah lain mana pun yang memakai produk ini.
+     */
+    protected function shareSchoolHeader(): void
+    {
+        view()->composer('components.layouts.guru-admin', function (View $view): void {
+            $view->with('schoolName', SchoolProfile::current()->name);
+            $view->with('activeYearLabel', AcademicYear::query()->where('is_active', true)->value('year_label'));
         });
     }
 
