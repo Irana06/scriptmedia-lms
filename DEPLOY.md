@@ -86,6 +86,23 @@ php artisan storage:link
 
 Jangan unggah `bootstrap/cache/` — biarkan digenerate di server.
 
+## Instalasi baru untuk sekolah klien
+
+Setelah migrasi pertama kali di server sekolah baru (bukan demo), jalankan wizard sekali:
+
+```bash
+php artisan sekolah:setup
+```
+
+Wizard ini interaktif (tanya nama sekolah, NPSN, nama/email admin pertama, label tahun
+ajaran) dan mengisi profil sekolah, akun admin pertama dengan password acak (wajib diganti
+saat login pertama), serta tahun ajaran aktif. Aman dijalankan ulang — baris yang sudah ada
+dilewati, tidak digandakan. Untuk otomasi non-interaktif, pakai opsi `--nama`, `--npsn`,
+`--admin-nama`, `--admin-email`, `--tahun-ajaran` bersama `--no-interaction`.
+
+Tanpa langkah ini, header dashboard menampilkan nama sekolah sementara "Sekolah Baru" sampai
+admin mengisinya lewat wizard atau langsung dari halaman Struktur Akademik.
+
 ## Data demo
 
 ```bash

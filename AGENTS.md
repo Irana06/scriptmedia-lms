@@ -22,10 +22,12 @@ Tests use Pest 5 with an in-memory SQLite database. Name files by behavior or su
 
 ## Product, Security & Design Constraints
 
-This standalone, single-tenant LMS supports in-person SMP/SMA/SMK classes. Do not add parent/guardian modules or real-time video classes. Admins and teachers use email/password accounts. Students cannot self-register: imports create NISN-based accounts with generated passwords and a required first-login password change; only staff reset student passwords. Never commit `.env` or credentials.
+Each deployment serves one school (one database per install, deployed separately per client via `scripts/server-deploy.sh`) for in-person SMP/SMA/SMK/madrasah classes — not real-time video classes. Four roles: admin, guru (teacher), siswa (student), and ortu (parent/guardian, read-only). Admins and teachers use email/password accounts. Students cannot self-register: imports create NISN- or NIS-based accounts (private schools often lack NISN) with generated passwords and a required first-login password change; only staff reset student passwords.
+
+Guardians may self-register, but a guardian-student link only takes effect after admin approval (`GuardianLink`/`guardian_student`), and `App\Auth\StudentAccess` is the single place that decides read access (`viewedStudent()`) versus act-as-student access (`actingStudent()`, always the logged-in student, never a guardian). Any new guardian-facing feature must go through the read-only path only — never let a guardian submit assignments, take quizzes, or otherwise act as the student. New installs run `php artisan sekolah:setup` once to create the school profile, first admin, and active academic year. Never commit `.env` or credentials.
 
 Match the supplied ScriptMedia reference: Questrial, 18px cards, subtle borders/shadows, pill badges, navy `#0B2545`, tosca `#2CA6A4`, orange `#F4A300`, and off-white `#F4FAFA`.
 
 ## Commit & Pull Request Guidelines
 
-Git history is unavailable in this checkout. Until a project convention is established, use short imperative Conventional Commit subjects such as `feat: add student import`. Pull requests should explain scope, list migrations/configuration changes, link the issue, include UI screenshots when relevant, and confirm `composer test` passes.
+Use short imperative Conventional Commit subjects such as `feat: add student import`; run `git log` for the established style. Do not add a `Co-Authored-By` trailer for any AI assistant — commits use the developer's own git credentials only. Pull requests should explain scope, list migrations/configuration changes, link the issue, include UI screenshots when relevant, and confirm `composer test` passes.
