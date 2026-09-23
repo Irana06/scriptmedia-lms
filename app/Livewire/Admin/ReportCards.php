@@ -4,6 +4,8 @@ namespace App\Livewire\Admin;
 
 use App\Models\SchoolClass;
 use App\Models\Semester;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -27,6 +29,20 @@ class ReportCards extends Component
         $this->selectFirstClass();
     }
 
+    /**
+     * Admin melihat semua kelas; guru hanya kelas yang diwalikannya, supaya guru
+     * tidak bisa membuka rapor siswa kelas lain lewat halaman ini.
+     *
+     * @param  Builder<SchoolClass>  $query
+     * @return Builder<SchoolClass>
+     */
+    private function scopeToActor(Builder $query): Builder
+    {
+        $user = Auth::user();
+
+        return $user?->hasRole('admin') ? $query : $query->where('homeroom_teacher_id', $user?->id);
+    }
+
     public function updatedSemesterId(): void
     {
         $this->selectFirstClass();
@@ -41,11 +57,13 @@ class ReportCards extends Component
     {
         $semester = $this->semesterId !== '' ? Semester::query()->find($this->semesterId) : null;
         $classes = $semester
-            ? SchoolClass::query()->where('academic_year_id', $semester->academic_year_id)->orderBy('name')->get()
+            ? $this->scopeToActor(SchoolClass::query()->where('academic_year_id', $semester->academic_year_id))->orderBy('name')->get()
             : collect();
-        $students = $this->classId !== ''
-            ? SchoolClass::query()->find($this->classId)?->students()->orderBy('name')->get() ?? collect()
-            : collect();
+        // Kelas dipilih dari daftar yang sudah dibatasi di atas, bukan dicari ulang
+        // tanpa batasan — supaya guru tidak bisa membuka rapor kelas lain dengan
+        // menitipkan classId yang bukan miliknya.
+        $selectedClass = $this->classId !== '' ? $classes->firstWhere('id', (int) $this->classId) : null;
+        $students = $selectedClass?->students()->orderBy('name')->get() ?? collect();
 
         return view('livewire.admin.report-cards', [
             'semesters' => Semester::query()->with('academicYear')->latest('start_date')->get(),
@@ -57,7 +75,9 @@ class ReportCards extends Component
     private function selectFirstClass(): void
     {
         $semester = Semester::query()->find($this->semesterId);
-        $class = $semester ? SchoolClass::query()->where('academic_year_id', $semester->academic_year_id)->orderBy('name')->first() : null;
+        $class = $semester
+            ? $this->scopeToActor(SchoolClass::query()->where('academic_year_id', $semester->academic_year_id))->orderBy('name')->first()
+            : null;
         $this->classId = $class ? (string) $class->id : '';
         $this->selectFirstStudent();
     }

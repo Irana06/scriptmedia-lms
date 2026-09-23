@@ -115,6 +115,14 @@
                                 <flux:icon.clipboard-document-check class="size-5" />
                                 Nilai & Presensi
                             </a>
+                            <a href="{{ route('admin.report-cards.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.report-cards.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.report-cards.*'),
+                            ]) wire:navigate>
+                                <flux:icon.document-text class="size-5" />
+                                Rapor Kelas
+                            </a>
                         @endrole
                         <a href="{{ route('communications.index') }}" @class([
                             'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',

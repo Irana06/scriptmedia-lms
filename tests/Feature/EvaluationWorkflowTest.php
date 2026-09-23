@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Admin\ReportCards;
 use App\Livewire\Student\EvaluationSummary;
 use App\Livewire\Teacher\EvaluationManager;
 use App\Models\AcademicYear;
@@ -284,10 +285,11 @@ class EvaluationWorkflowTest extends TestCase
             ->assertSee('Sesuai hitung otomatis');
     }
 
-    public function test_only_admin_can_download_student_report_card_pdf(): void
+    public function test_admin_and_the_homeroom_teacher_can_download_a_report_card_pdf(): void
     {
-        [, $students, $classSubject, $semester] = $this->evaluationContext();
+        [$homeroomTeacher, $students, $classSubject, $semester] = $this->evaluationContext();
         $admin = User::factory()->admin()->create();
+        $otherTeacher = User::factory()->teacher()->create();
         Grade::query()->create([
             'student_id' => $students[0]->id,
             'class_subject_id' => $classSubject->id,
@@ -301,9 +303,55 @@ class EvaluationWorkflowTest extends TestCase
         $this->assertStringStartsWith('application/pdf', (string) $response->headers->get('content-type'));
         $this->assertStringStartsWith('%PDF', (string) $response->getContent());
 
+        $this->actingAs($homeroomTeacher)
+            ->get(route('admin.report-cards.download', [$semester, $students[0]]))
+            ->assertOk();
+
+        $this->actingAs($otherTeacher)
+            ->get(route('admin.report-cards.download', [$semester, $students[0]]))
+            ->assertForbidden();
+
         $this->actingAs($students[0])
             ->get(route('admin.report-cards.download', [$semester, $students[0]]))
             ->assertForbidden();
+    }
+
+    public function test_report_cards_page_only_lists_classes_the_teacher_is_homeroom_of(): void
+    {
+        [$homeroomTeacher, $students, , $semester] = $this->evaluationContext();
+        $otherTeacher = User::factory()->teacher()->create();
+
+        $this->actingAs($homeroomTeacher);
+        Livewire::test(ReportCards::class)
+            ->set('semesterId', (string) $semester->id)
+            ->assertSee('7A')
+            ->assertSee($students[0]->name);
+
+        $this->actingAs($otherTeacher);
+        Livewire::test(ReportCards::class)
+            ->set('semesterId', (string) $semester->id)
+            ->assertDontSee('7A')
+            ->assertDontSee($students[0]->name);
+    }
+
+    public function test_report_card_filename_falls_back_to_nis_when_student_has_no_nisn(): void
+    {
+        [, $students, $classSubject, $semester] = $this->evaluationContext();
+        $admin = User::factory()->admin()->create();
+        $student = $students[0];
+        $student->forceFill(['nisn' => null, 'nis' => 'NIS-9001'])->save();
+        Grade::query()->create([
+            'student_id' => $student->id,
+            'class_subject_id' => $classSubject->id,
+            'semester_id' => $semester->id,
+            'final_score' => 88,
+            'predikat' => 'B',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.report-cards.download', [$semester, $student]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('rapor-NIS-9001-semester', (string) $response->headers->get('content-disposition'));
     }
 
     /** @return array{User, list<User>, ClassSubject, Semester} */

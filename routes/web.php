@@ -82,7 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('template/{type}', ImportTemplateController::class)->name('template');
         Route::get('{dataImport}/kartu-akun', ImportCredentialsController::class)->name('credentials');
     });
-    Route::middleware('role:admin')->prefix('admin/rapor')->name('admin.report-cards.')->group(function () {
+    // Admin melihat rapor semua siswa. Guru hanya rapor kelas yang diwalikannya —
+    // dicek di dalam komponen/controller, bukan lewat middleware role saja.
+    Route::middleware('role:admin|guru')->prefix('admin/rapor')->name('admin.report-cards.')->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });

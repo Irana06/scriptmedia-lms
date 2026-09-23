@@ -9,17 +9,23 @@ use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class ReportCardController extends Controller
 {
-    public function __invoke(Semester $semester, User $student): Response
+    public function __invoke(Request $request, Semester $semester, User $student): Response
     {
         $schoolClass = SchoolClass::query()
             ->where('academic_year_id', $semester->academic_year_id)
             ->whereHas('students', fn ($query) => $query->whereKey($student->id))
             ->with('homeroomTeacher', 'academicYear')
             ->firstOrFail();
+
+        // Admin melihat rapor siapa pun; guru hanya rapor kelas yang diwalikannya.
+        $actor = $request->user();
+        abort_unless($actor->hasRole('admin') || $schoolClass->homeroom_teacher_id === $actor->id, 403);
+
         $grades = Grade::query()
             ->with('classSubject.subject', 'classSubject.teacher')
             ->where('student_id', $student->id)
@@ -34,8 +40,11 @@ class ReportCardController extends Controller
         $attendanceCounts = collect(['hadir', 'izin', 'sakit', 'alpa'])
             ->mapWithKeys(fn ($status): array => [$status => $attendances->where('status', $status)->count()]);
 
+        // Siswa sekolah swasta boleh terdaftar dengan NIS saja, tanpa NISN.
+        $identifier = $student->nisn ?: ($student->nis ?: $student->id);
+
         return Pdf::loadView('pdf.report-card', compact('semester', 'student', 'schoolClass', 'grades', 'attendanceCounts'))
             ->setPaper('a4')
-            ->download("rapor-{$student->nisn}-semester-".strtolower($semester->name).'.pdf');
+            ->download("rapor-{$identifier}-semester-".strtolower($semester->name).'.pdf');
     }
 }
