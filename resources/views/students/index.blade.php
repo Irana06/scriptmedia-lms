@@ -33,7 +33,7 @@
                     @forelse ($students as $student)
                         <tr>
                             <td class="px-5 py-4 sm:px-6">
-                                <p class="font-semibold text-navy">{{ $student->name }}</p>
+                                <p class="font-semibold text-navy">{{ $student->name }} @if ($student->graduated_at)<x-theme.badge tone="neutral" class="ml-1 align-middle">Lulus {{ $student->graduated_at->format('Y') }}</x-theme.badge>@endif</p>
                                 @if ($student->nik)
                                     <p class="mt-1 text-xs text-ink-soft">NIK {{ $student->nik }}</p>
                                 @endif

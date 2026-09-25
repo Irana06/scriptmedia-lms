@@ -39,6 +39,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $announcements_seen_at
+ * @property Carbon|null $graduated_at
  * @property string|null $phone
  * @property Carbon|null $updated_at
  */
@@ -59,6 +60,7 @@ class User extends Authenticatable implements PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'announcements_seen_at' => 'datetime',
+            'graduated_at' => 'datetime',
             'must_change_password' => 'boolean',
             'password' => 'hashed',
         ];

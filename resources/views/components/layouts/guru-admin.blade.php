@@ -87,6 +87,14 @@
                                 <flux:icon.document-arrow-up class="size-5" />
                                 Import Akun
                             </a>
+                            <a href="{{ route('admin.promotion.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.promotion.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.promotion.*'),
+                            ]) wire:navigate>
+                                <flux:icon.arrow-trending-up class="size-5" />
+                                Kenaikan Kelas
+                            </a>
                             <a href="{{ route('admin.report-cards.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
                                 'bg-white/12 font-semibold text-white' => request()->routeIs('admin.report-cards.*'),

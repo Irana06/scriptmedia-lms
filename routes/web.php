@@ -14,6 +14,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
+use App\Livewire\Admin\ClassPromotion;
 use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Admin\ReportCards;
 use App\Livewire\Admin\SchoolSettings;
@@ -89,6 +90,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::livewire('admin/kenaikan-kelas', ClassPromotion::class)
+        ->middleware('role:admin')
+        ->name('admin.promotion.index');
     Route::livewire('admin/profil-sekolah', SchoolSettings::class)
         ->middleware('role:admin')
         ->name('admin.school.index');
