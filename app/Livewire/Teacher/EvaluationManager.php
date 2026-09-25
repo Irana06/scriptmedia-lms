@@ -5,6 +5,7 @@ namespace App\Livewire\Teacher;
 use App\Models\Attendance;
 use App\Models\ClassSubject;
 use App\Models\Grade;
+use App\Models\GradeAudit;
 use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Services\FinalGradeService;
@@ -116,6 +117,10 @@ class EvaluationManager extends Component
                 }
                 $numericScore = (float) $score;
                 $description = trim((string) ($validated['descriptions'][$studentId] ?? ''));
+                $previous = Grade::query()
+                    ->where(['student_id' => $studentId, 'class_subject_id' => $assignment->id, 'semester_id' => $semester->id])
+                    ->value('final_score');
+                GradeAudit::record('final', (int) $studentId, $assignment->id, "{$assignment->subject->name} · Semester {$semester->name}", $previous, $numericScore);
                 Grade::query()->updateOrCreate(
                     ['student_id' => $studentId, 'class_subject_id' => $assignment->id, 'semester_id' => $semester->id],
                     [

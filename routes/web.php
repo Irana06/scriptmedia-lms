@@ -18,6 +18,7 @@ use App\Http\Controllers\WebManifestController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
 use App\Livewire\Admin\ClassPromotion;
+use App\Livewire\Admin\GradeHistory;
 use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Admin\ReportCards;
 use App\Livewire\Admin\SchoolSettings;
@@ -95,6 +96,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::livewire('admin/riwayat-nilai', GradeHistory::class)
+        ->middleware('role:admin')
+        ->name('admin.grade-history.index');
     Route::get('admin/pantauan', MonitoringController::class)
         ->middleware('role:admin')
         ->name('admin.monitoring.index');

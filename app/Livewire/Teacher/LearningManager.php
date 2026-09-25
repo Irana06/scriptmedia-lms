@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentGrade;
 use App\Models\AssignmentSubmission;
 use App\Models\ClassSubject;
+use App\Models\GradeAudit;
 use App\Models\Material;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
@@ -241,6 +242,8 @@ class LearningManager extends Component
             'gradeScore' => ['required', 'numeric', 'min:0', 'max:100'],
             'gradeFeedback' => ['nullable', 'string', 'max:3000'],
         ]);
+        $submission->loadMissing('assignment');
+        GradeAudit::record('assignment', $submission->student_id, $submission->assignment->class_subject_id, $submission->assignment->title, $submission->grade?->score, (float) $validated['gradeScore']);
         AssignmentGrade::query()->updateOrCreate(
             ['submission_id' => $submission->id],
             ['score' => $validated['gradeScore'], 'feedback' => $validated['gradeFeedback'] ?: null],
@@ -335,6 +338,15 @@ class LearningManager extends Component
         $answer = QuizAnswer::query()->with('attempt.quiz')->findOrFail($answerId);
         $this->authorizeOwned($answer->attempt->quiz->class_subject_id);
         $validated = $this->validate(['essayScore' => ['required', 'numeric', 'min:0', 'max:1']]);
+        // Esai dinilai 0-1 per soal; dicatat dalam skala 0-100 supaya sebanding dengan nilai lain.
+        GradeAudit::record(
+            'essay',
+            $answer->attempt->student_id,
+            $answer->attempt->quiz->class_subject_id,
+            $answer->attempt->quiz->title,
+            $answer->score !== null ? (float) $answer->score * 100 : null,
+            (float) $validated['essayScore'] * 100,
+        );
         $answer->update(['score' => $validated['essayScore']]);
         $scoring->recalculate($answer->attempt);
         $this->reset('essayScore');

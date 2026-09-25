@@ -111,6 +111,14 @@
                                 <flux:icon.document-text class="size-5" />
                                 Rapor Siswa
                             </a>
+                            <a href="{{ route('admin.grade-history.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.grade-history.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.grade-history.*'),
+                            ]) wire:navigate>
+                                <flux:icon.clock class="size-5" />
+                                Riwayat Nilai
+                            </a>
                             <a href="{{ route('admin.school.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
                                 'bg-white/12 font-semibold text-white' => request()->routeIs('admin.school.*'),
