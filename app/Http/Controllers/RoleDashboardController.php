@@ -13,6 +13,7 @@ use App\Models\GuardianLink;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Services\EarlyWarningService;
 use App\Support\SchoolDay;
 use App\Support\SetupChecklist;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,9 +23,10 @@ use Illuminate\View\View;
 
 class RoleDashboardController extends Controller
 {
-    public function admin(): View
+    public function admin(EarlyWarningService $earlyWarning): View
     {
         return view('dashboards.admin', [
+            'atRiskStudents' => collect($earlyWarning->summary()['atRisk']),
             'studentCount' => User::query()->whereHas('roles', fn ($query) => $query->where('name', 'siswa'))->count(),
             'teacherCount' => User::query()->whereHas('roles', fn ($query) => $query->where('name', 'guru'))->count(),
             'activeClassCount' => SchoolClass::query()->whereHas('academicYear', fn ($query) => $query->where('is_active', true))->count(),

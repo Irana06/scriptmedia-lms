@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
+use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\ReportCardController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GuardianRegistrationController;
@@ -90,6 +91,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::get('admin/pantauan', MonitoringController::class)
+        ->middleware('role:admin')
+        ->name('admin.monitoring.index');
     Route::livewire('admin/kenaikan-kelas', ClassPromotion::class)
         ->middleware('role:admin')
         ->name('admin.promotion.index');

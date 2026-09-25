@@ -52,6 +52,14 @@
                             Kelas & Siswa
                         </a>
                         @role('admin')
+                            <a href="{{ route('admin.monitoring.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.monitoring.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.monitoring.*'),
+                            ]) wire:navigate>
+                                <flux:icon.chart-bar-square class="size-5" />
+                                Pantauan Siswa
+                            </a>
                             <a href="{{ route('teachers.index') }}" @class([
                                 'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
                                 'bg-white/12 font-semibold text-white' => request()->routeIs('teachers.*'),

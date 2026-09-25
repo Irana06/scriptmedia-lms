@@ -11,6 +11,16 @@
                 <flux:icon.arrow-right class="size-5 shrink-0 text-orange-ink" />
             </a>
         @endif
+        @if ($atRiskStudents->isNotEmpty())
+            <a href="{{ route('admin.monitoring.index') }}" class="flex items-center gap-4 rounded-card border border-line bg-white p-5 shadow-sm transition hover:border-tosca" wire:navigate data-test="at-risk-teaser">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-orange/15 text-orange-ink"><flux:icon.exclamation-triangle class="size-5" /></span>
+                <span class="min-w-0 flex-1">
+                    <strong class="block text-navy">{{ $atRiskStudents->count() }} siswa perlu perhatian</strong>
+                    <span class="mt-1 block truncate text-sm text-ink-soft">{{ $atRiskStudents->take(3)->map(fn ($row) => $row['name'].' ('.$row['reasons'][0].')')->implode(' · ') }}</span>
+                </span>
+                <flux:icon.arrow-right class="size-5 shrink-0 text-ink-soft" />
+            </a>
+        @endif
         @php($doneSteps = $setupSteps->where('done', true)->count())
         @if ($doneSteps < $setupSteps->count())
             <x-theme.card data-test="setup-checklist">
