@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\QuizQuestionTemplateExport;
+use App\Http\Controllers\Admin\BackupDownloadController;
 use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\MonitoringController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\WebManifestController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
+use App\Livewire\Admin\Backups;
 use App\Livewire\Admin\ClassPromotion;
 use App\Livewire\Admin\GradeHistory;
 use App\Livewire\Admin\GuardianManager;
@@ -96,6 +98,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::livewire('admin/cadangan', Backups::class)
+        ->middleware('role:admin')
+        ->name('admin.backups.index');
+    Route::get('admin/cadangan/{name}', BackupDownloadController::class)
+        ->middleware('role:admin')
+        ->name('admin.backups.download');
     Route::livewire('admin/riwayat-nilai', GradeHistory::class)
         ->middleware('role:admin')
         ->name('admin.grade-history.index');

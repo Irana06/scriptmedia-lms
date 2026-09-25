@@ -103,6 +103,26 @@ dilewati, tidak digandakan. Untuk otomasi non-interaktif, pakai opsi `--nama`, `
 Tanpa langkah ini, header dashboard menampilkan nama sekolah sementara "Sekolah Baru" sampai
 admin mengisinya lewat wizard atau langsung dari halaman Struktur Akademik.
 
+## Cadangan otomatis (cron)
+
+Cadangan harian (data, 14 terakhir disimpan) dan mingguan (data + berkas unggahan, 4
+terakhir) berjalan lewat scheduler Laravel. Tambahkan satu Cron Job di cPanel
+(*Cron Jobs* → *Common Settings: Once Per Minute*):
+
+```bash
+cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
+```
+
+Berkas tersimpan di `storage/app/private/backups` dan bisa diunduh admin dari menu
+**Cadangan Data**. Unduh dan simpan di luar server secara berkala — cadangan yang hanya
+ada di server ikut hilang bila server rusak.
+
+Pemulihan (menimpa seluruh data; buat cadangan terbaru dulu):
+
+```bash
+php artisan sekolah:restore cadangan-2026-09-26-013000.zip
+```
+
 ## Data demo
 
 ```bash

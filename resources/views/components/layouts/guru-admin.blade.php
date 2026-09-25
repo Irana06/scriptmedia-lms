@@ -127,6 +127,14 @@
                                 <flux:icon.building-office-2 class="size-5" />
                                 Profil Sekolah
                             </a>
+                            <a href="{{ route('admin.backups.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.backups.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.backups.*'),
+                            ]) wire:navigate>
+                                <flux:icon.archive-box class="size-5" />
+                                Cadangan Data
+                            </a>
                         @endrole
                         @role('guru')
                             <a href="{{ route('teacher.learning.index') }}" @class([
