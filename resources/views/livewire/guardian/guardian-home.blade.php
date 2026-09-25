@@ -67,12 +67,17 @@
                 </div>
                 <ul class="divide-y divide-line">
                     @forelse ($overview['grades'] as $grade)
-                        <li class="flex items-center justify-between gap-3 px-5 py-3.5 sm:px-6">
-                            <span class="font-medium text-navy">{{ $grade->classSubject->subject->name }}</span>
-                            <span class="flex items-center gap-2">
-                                <span class="text-lg font-semibold tabular-nums text-navy">{{ \App\Support\Score::format($grade->final_score) }}</span>
-                                <x-theme.badge tone="tosca-soft">{{ $grade->predikat }}</x-theme.badge>
-                            </span>
+                        <li class="px-5 py-3.5 sm:px-6">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-medium text-navy">{{ $grade->classSubject->subject->name }}</span>
+                                <span class="flex items-center gap-2">
+                                    <span @class(['text-lg font-semibold tabular-nums', 'text-navy' => (float) $grade->final_score >= $grade->classSubject->subject->kkm, 'text-red-600' => (float) $grade->final_score < $grade->classSubject->subject->kkm])>{{ \App\Support\Score::format($grade->final_score) }}</span>
+                                    <x-theme.badge tone="tosca-soft">{{ $grade->predikat }}</x-theme.badge>
+                                </span>
+                            </div>
+                            @if ($grade->description)
+                                <p class="mt-1.5 text-xs leading-5 text-ink-soft">{{ $grade->description }}</p>
+                            @endif
                         </li>
                     @empty
                         <li class="p-10 text-center text-sm text-ink-soft">Nilai akhir semester ini belum diterbitkan guru.</li>

@@ -21,10 +21,22 @@
             </div>
             @if ($selectedAssignment && $selectedAssignment->schoolClass->students->isNotEmpty())
                 <form wire:submit="saveGrades">
-                    <div class="overflow-x-auto"><table class="min-w-full text-left text-sm"><thead class="bg-offwhite text-ink-soft"><tr><th class="px-5 py-3 sm:px-6">Siswa</th><th class="px-5 py-3">NISN</th><th class="px-5 py-3">Nilai akhir</th><th class="px-5 py-3">Predikat</th></tr></thead><tbody class="divide-y divide-line">
+                    @php($kkm = $selectedAssignment->subject->kkm)
+                    <p class="border-b border-line bg-offwhite/60 px-5 py-3 text-xs text-ink-soft sm:px-6">KKM {{ $selectedAssignment->subject->name }}: <strong class="text-navy">{{ $kkm }}</strong>. Deskripsi capaian terisi otomatis saat <em>Hitung otomatis</em> dan boleh disunting; kosong berarti dibuat otomatis saat disimpan.</p>
+                    <div class="overflow-x-auto"><table class="min-w-full text-left text-sm"><thead class="bg-offwhite text-ink-soft"><tr><th class="px-5 py-3 sm:px-6">Siswa</th><th class="px-5 py-3">Nilai akhir</th><th class="px-5 py-3">Predikat</th><th class="min-w-80 px-5 py-3">Deskripsi capaian</th></tr></thead><tbody class="divide-y divide-line">
                         @foreach($selectedAssignment->schoolClass->students->sortBy('name') as $student)
                             @php($score = $scores[$student->id] ?? '')
-                            <tr><td class="px-5 py-4 font-semibold text-navy sm:px-6">{{ $student->name }}</td><td class="px-5 py-4 text-ink-soft">{{ $student->nisn }}</td><td class="px-5 py-3"><input wire:model="scores.{{ $student->id }}" type="number" min="0" max="100" step="0.01" class="min-h-10 w-28 rounded-xl border border-line px-3"></td><td class="px-5 py-4"><x-theme.badge tone="neutral">{{ $score === '' ? '—' : ((float)$score >= 90 ? 'A' : ((float)$score >= 80 ? 'B' : ((float)$score >= 70 ? 'C' : ((float)$score >= 60 ? 'D' : 'E')))) }}</x-theme.badge></td></tr>
+                            <tr class="align-top">
+                                <td class="px-5 py-4 sm:px-6"><p class="font-semibold text-navy">{{ $student->name }}</p><p class="text-xs text-ink-soft">{{ $student->nisn ?: $student->nis }}</p></td>
+                                <td class="px-5 py-3"><input wire:model="scores.{{ $student->id }}" type="number" min="0" max="100" step="0.01" class="min-h-10 w-28 rounded-xl border border-line px-3"></td>
+                                <td class="px-5 py-4">
+                                    <x-theme.badge tone="neutral">{{ $score === '' ? '—' : ((float)$score >= 90 ? 'A' : ((float)$score >= 80 ? 'B' : ((float)$score >= 70 ? 'C' : ((float)$score >= 60 ? 'D' : 'E')))) }}</x-theme.badge>
+                                    @if ($score !== '')
+                                        <p @class(['mt-1.5 text-xs font-semibold', 'text-tosca-ink' => (float) $score >= $kkm, 'text-red-600' => (float) $score < $kkm])>{{ (float) $score >= $kkm ? 'Tuntas' : 'Belum tuntas' }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3"><textarea wire:model="descriptions.{{ $student->id }}" rows="2" class="w-full rounded-xl border border-line px-3 py-2 text-sm" placeholder="Dibuat otomatis bila dikosongkan"></textarea></td>
+                            </tr>
                         @endforeach
                     </tbody></table></div>
                     @error('scores.*') <p class="px-6 pt-3 text-sm text-red-600">{{ $message }}</p> @enderror

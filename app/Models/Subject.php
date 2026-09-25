@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $name
  * @property string $code
+ * @property int $kkm
  */
-#[Fillable(['name', 'code'])]
+#[Fillable(['name', 'code', 'kkm'])]
 class Subject extends Model
 {
     /** @return HasMany<ClassSubject, $this> */

@@ -21,6 +21,10 @@
         .report th { background: #0B2545; color: white; font-size: 10px; padding: 9px 8px; text-align: left; }
         .report td { border-bottom: 1px solid #DDE8E8; padding: 9px 8px; }
         .center { text-align: center !important; }
+        .report td { vertical-align: top; }
+        .muted { color: #86939E; font-size: 8.5px; margin-top: 2px; }
+        .desc { font-size: 9.5px; line-height: 1.4; }
+        .below { color: #B42318; }
         .section { color: #0B2545; font-size: 13px; font-weight: bold; margin-top: 18px; }
         .attendance { margin-top: 8px; width: 55%; }
         .attendance td { border: 1px solid #DDE8E8; padding: 7px 9px; }
@@ -47,7 +51,24 @@
     <div class="title">RAPOR SEMESTER {{ strtoupper($semester->name) }}</div>
     <table class="identity"><tr><td class="label">Nama</td><td>: <strong>{{ $student->name }}</strong></td><td class="label">Kelas</td><td>: {{ $schoolClass->name }}</td></tr><tr><td class="label">{{ $student->nisn ? 'NISN' : 'NIS' }}</td><td>: {{ $student->nisn ?: $student->nis }}</td><td class="label">Tahun Ajaran</td><td>: {{ $schoolClass->academicYear->year_label }}</td></tr><tr><td class="label">Semester</td><td>: {{ $semester->name }}</td><td class="label">Wali Kelas</td><td>: {{ $schoolClass->homeroomTeacher?->name ?? '-' }}</td></tr></table>
     <div class="section">A. Hasil Belajar</div>
-    <table class="report"><thead><tr><th style="width:28px" class="center">No.</th><th>Mata Pelajaran</th><th>Guru</th><th style="width:62px" class="center">Nilai</th><th style="width:60px" class="center">Predikat</th></tr></thead><tbody>@forelse($grades as $grade)<tr><td class="center">{{ $loop->iteration }}</td><td>{{ $grade->classSubject->subject->name }}</td><td>{{ $grade->classSubject->teacher->name }}</td><td class="center"><strong>{{ number_format((float)$grade->final_score, 2) }}</strong></td><td class="center"><strong>{{ $grade->predikat }}</strong></td></tr>@empty<tr><td colspan="5" class="center">Nilai belum tersedia.</td></tr>@endforelse</tbody></table>
+    <table class="report">
+        <thead><tr><th style="width:22px" class="center">No.</th><th style="width:130px">Mata Pelajaran</th><th style="width:34px" class="center">KKM</th><th style="width:42px" class="center">Nilai</th><th style="width:44px" class="center">Predikat</th><th>Capaian Kompetensi</th></tr></thead>
+        <tbody>
+            @forelse($grades as $grade)
+                @php($kkm = $grade->classSubject->subject->kkm)
+                <tr>
+                    <td class="center">{{ $loop->iteration }}</td>
+                    <td>{{ $grade->classSubject->subject->name }}<div class="muted">{{ $grade->classSubject->teacher->name }}</div></td>
+                    <td class="center">{{ $kkm }}</td>
+                    <td class="center"><strong @if((float) $grade->final_score < $kkm) class="below" @endif>{{ \App\Support\Score::format($grade->final_score) }}</strong></td>
+                    <td class="center"><strong>{{ $grade->predikat }}</strong></td>
+                    <td class="desc">{{ $grade->description ?: \App\Support\CompetencyDescription::generate($grade->classSubject->subject->name, (float) $grade->final_score, $kkm) }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="6" class="center">Nilai belum tersedia.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
     <div class="section">B. Rekap Kehadiran</div>
     <table class="attendance">@foreach(['hadir' => 'Hadir', 'izin' => 'Izin', 'sakit' => 'Sakit', 'alpa' => 'Tanpa keterangan'] as $status => $label)<tr><td>{{ $label }}</td><td class="value">{{ $attendanceCounts[$status] }} hari</td></tr>@endforeach</table>
     <table class="signatures">

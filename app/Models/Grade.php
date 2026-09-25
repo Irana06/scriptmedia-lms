@@ -5,9 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
-/** @property int $id @property int $student_id @property int $class_subject_id @property int $semester_id @property string $final_score @property string $predikat */
-#[Fillable(['student_id', 'class_subject_id', 'semester_id', 'final_score', 'predikat'])]
+/**
+ * @property int $id
+ * @property int $student_id
+ * @property int $class_subject_id
+ * @property int $semester_id
+ * @property string $final_score
+ * @property string $predikat
+ * @property string|null $description
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[Fillable(['student_id', 'class_subject_id', 'semester_id', 'final_score', 'predikat', 'description'])]
 class Grade extends Model
 {
     /** @return BelongsTo<User, $this> */

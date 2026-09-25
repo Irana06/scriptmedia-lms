@@ -133,6 +133,44 @@ class EvaluationWorkflowTest extends TestCase
             ->assertSet("scores.{$student->id}", '88');
     }
 
+    public function test_saved_grade_gets_a_competency_description_based_on_kkm(): void
+    {
+        [$teacher, $students, $classSubject, $semester] = $this->evaluationContext();
+        $classSubject->subject->update(['kkm' => 80]);
+
+        $this->actingAs($teacher);
+        Livewire::test(EvaluationManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('semesterId', (string) $semester->id)
+            ->set("scores.{$students[0]->id}", '72')
+            ->set("scores.{$students[1]->id}", '95')
+            ->set("descriptions.{$students[1]->id}", 'Sangat aktif berdiskusi.')
+            ->assertSee('KKM Matematika')
+            ->call('saveGrades')
+            ->assertHasNoErrors();
+
+        $below = Grade::query()->where('student_id', $students[0]->id)->firstOrFail();
+        $this->assertStringContainsString('Belum mencapai ketuntasan minimal', (string) $below->description);
+        $this->assertSame('Sangat aktif berdiskusi.', Grade::query()->where('student_id', $students[1]->id)->value('description'));
+    }
+
+    public function test_auto_fill_suggests_descriptions_without_overwriting_edits(): void
+    {
+        [$teacher, $students, $classSubject, $semester] = $this->evaluationContext();
+        $this->createGradedAssignment($classSubject, $students[0], 'tugas', 95);
+        $this->createGradedAssignment($classSubject, $students[1], 'tugas', 60);
+
+        $this->actingAs($teacher);
+        $component = Livewire::test(EvaluationManager::class)
+            ->set('classSubjectId', (string) $classSubject->id)
+            ->set('semesterId', (string) $semester->id)
+            ->set("descriptions.{$students[1]->id}", 'Catatan guru sendiri.')
+            ->call('autoFillScores');
+
+        $this->assertStringContainsString('sangat baik', (string) $component->get("descriptions.{$students[0]->id}"));
+        $component->assertSet("descriptions.{$students[1]->id}", 'Catatan guru sendiri.');
+    }
+
     public function test_teacher_saves_one_class_attendance_in_one_submit(): void
     {
         [$teacher, $students, $classSubject] = $this->evaluationContext();

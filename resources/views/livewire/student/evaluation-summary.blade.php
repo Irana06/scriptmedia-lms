@@ -69,7 +69,7 @@
     @if($selectedGrade)
         <x-theme.card id="rincian-nilai" :padding="false" class="overflow-hidden border-tosca/30">
             <div class="flex flex-col justify-between gap-4 border-b border-line bg-tosca-tint/35 px-5 py-5 sm:flex-row sm:items-center sm:px-6">
-                <div><p class="text-xs font-semibold uppercase tracking-[0.16em] text-tosca-ink">Rincian nilai</p><h2 class="mt-1 text-xl">{{ $selectedGrade->classSubject->subject->name }}</h2><p class="mt-1 text-sm text-ink-soft">Nilai akhir {{ number_format((float) $selectedGrade->final_score, 2) }} · Predikat {{ $selectedGrade->predikat }}</p></div>
+                <div><p class="text-xs font-semibold uppercase tracking-[0.16em] text-tosca-ink">Rincian nilai</p><h2 class="mt-1 text-xl">{{ $selectedGrade->classSubject->subject->name }}</h2><p class="mt-1 text-sm text-ink-soft">Nilai akhir {{ number_format((float) $selectedGrade->final_score, 2) }} · Predikat {{ $selectedGrade->predikat }} · KKM {{ $selectedGrade->classSubject->subject->kkm }} ({{ (float) $selectedGrade->final_score >= $selectedGrade->classSubject->subject->kkm ? 'Tuntas' : 'Belum tuntas' }})</p>@if ($selectedGrade->description)<p class="mt-2 max-w-2xl text-sm leading-6 text-navy">{{ $selectedGrade->description }}</p>@endif</div>
                 <a href="{{ route('student.evaluation.index', ['semesterId' => $semesterId]) }}" class="text-sm font-semibold text-navy" wire:navigate>Tutup rincian ×</a>
             </div>
             <div class="grid gap-0 divide-y divide-line lg:grid-cols-2 lg:divide-x lg:divide-y-0">

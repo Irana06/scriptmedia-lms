@@ -61,6 +61,8 @@ class AcademicSetup extends Component
 
     public string $subjectCode = '';
 
+    public string $subjectKkm = '75';
+
     public ?int $assignmentId = null;
 
     public string $assignmentClassId = '';
@@ -253,11 +255,12 @@ class AcademicSetup extends Component
         $validated = $this->validate([
             'subjectName' => ['required', 'string', 'max:100'],
             'subjectCode' => ['required', 'string', 'max:20', Rule::unique('subjects', 'code')->ignore($this->subjectId)],
-        ]);
+            'subjectKkm' => ['required', 'integer', 'min:0', 'max:100'],
+        ], [], ['subjectKkm' => 'KKM']);
 
         Subject::query()->updateOrCreate(
             ['id' => $this->subjectId],
-            ['name' => $validated['subjectName'], 'code' => strtoupper($validated['subjectCode'])],
+            ['name' => $validated['subjectName'], 'code' => strtoupper($validated['subjectCode']), 'kkm' => (int) $validated['subjectKkm']],
         );
 
         $this->resetSubjectForm();
@@ -270,6 +273,7 @@ class AcademicSetup extends Component
         $this->subjectId = $subject->id;
         $this->subjectName = $subject->name;
         $this->subjectCode = $subject->code;
+        $this->subjectKkm = (string) $subject->kkm;
     }
 
     public function deleteSubject(int $id): void
@@ -510,7 +514,7 @@ class AcademicSetup extends Component
 
     private function resetSubjectForm(): void
     {
-        $this->reset('subjectId', 'subjectName', 'subjectCode');
+        $this->reset('subjectId', 'subjectName', 'subjectCode', 'subjectKkm');
         $this->resetValidation();
     }
 

@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Services\FinalGradeService;
+use App\Support\CompetencyDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,9 @@ class EvaluationManager extends Component
 
     /** @var array<int, string> */
     public array $scores = [];
+
+    /** @var array<int, string> */
+    public array $descriptions = [];
 
     public string $attendanceClassId = '';
 
@@ -79,24 +83,30 @@ class EvaluationManager extends Component
 
     public function autoFillScores(FinalGradeService $calculator): void
     {
-        $assignment = $this->selectedAssignment()->load('schoolClass.students');
+        $assignment = $this->selectedAssignment()->load('schoolClass.students', 'subject');
         $semester = Semester::query()->where('academic_year_id', $assignment->schoolClass->academic_year_id)->findOrFail($this->semesterId);
         foreach ($assignment->schoolClass->students as $student) {
             $calculated = $calculator->calculate($student, $assignment, $semester);
             if ($calculated !== null) {
                 $this->scores[$student->id] = (string) $calculated;
+                // Deskripsi yang sudah disunting guru tidak ditimpa.
+                if (trim($this->descriptions[$student->id] ?? '') === '') {
+                    $this->descriptions[$student->id] = CompetencyDescription::generate($assignment->subject->name, $calculated, $assignment->subject->kkm);
+                }
             }
         }
     }
 
     public function saveGrades(FinalGradeService $calculator): void
     {
-        $assignment = $this->selectedAssignment()->load('schoolClass.students');
+        $assignment = $this->selectedAssignment()->load('schoolClass.students', 'subject');
         $semester = Semester::query()->where('academic_year_id', $assignment->schoolClass->academic_year_id)->findOrFail($this->semesterId);
         $studentIds = $assignment->schoolClass->students->modelKeys();
         $validated = $this->validate([
             'scores' => ['array'],
             'scores.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'descriptions' => ['array'],
+            'descriptions.*' => ['nullable', 'string', 'max:1000'],
         ]);
 
         DB::transaction(function () use ($validated, $assignment, $semester, $studentIds, $calculator): void {
@@ -105,9 +115,16 @@ class EvaluationManager extends Component
                     continue;
                 }
                 $numericScore = (float) $score;
+                $description = trim((string) ($validated['descriptions'][$studentId] ?? ''));
                 Grade::query()->updateOrCreate(
                     ['student_id' => $studentId, 'class_subject_id' => $assignment->id, 'semester_id' => $semester->id],
-                    ['final_score' => $numericScore, 'predikat' => $calculator->predicate($numericScore)],
+                    [
+                        'final_score' => $numericScore,
+                        'predikat' => $calculator->predicate($numericScore),
+                        'description' => $description !== ''
+                            ? $description
+                            : CompetencyDescription::generate($assignment->subject->name, $numericScore, $assignment->subject->kkm),
+                    ],
                 );
             }
         });
@@ -165,14 +182,16 @@ class EvaluationManager extends Component
     private function loadScores(): void
     {
         $this->scores = [];
+        $this->descriptions = [];
         if ($this->classSubjectId === '' || $this->semesterId === '') {
             return;
         }
-        $this->scores = Grade::query()
+        $grades = Grade::query()
             ->where('class_subject_id', $this->classSubjectId)
             ->where('semester_id', $this->semesterId)
-            ->pluck('final_score', 'student_id')
-            ->map(fn ($score): string => (string) $score)->all();
+            ->get(['student_id', 'final_score', 'description']);
+        $this->scores = $grades->mapWithKeys(fn (Grade $grade): array => [$grade->student_id => (string) $grade->final_score])->all();
+        $this->descriptions = $grades->mapWithKeys(fn (Grade $grade): array => [$grade->student_id => (string) $grade->description])->all();
     }
 
     private function loadAttendance(): void

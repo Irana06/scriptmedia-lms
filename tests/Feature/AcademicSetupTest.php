@@ -52,6 +52,21 @@ class AcademicSetupTest extends TestCase
         $this->assertSame(10.0, (float) $weights->kuis);
     }
 
+    public function test_admin_sets_kkm_per_subject(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+
+        Livewire::test(AcademicSetup::class)
+            ->set('tab', 'subjects')
+            ->set('subjectName', 'Bahasa Indonesia')
+            ->set('subjectCode', 'bin')
+            ->set('subjectKkm', '78')
+            ->call('saveSubject')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('subjects', ['code' => 'BIN', 'kkm' => 78]);
+    }
+
     public function test_grade_weights_must_total_100(): void
     {
         $admin = User::factory()->admin()->create();
