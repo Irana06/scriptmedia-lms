@@ -11,11 +11,9 @@
         <header class="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur-md">
             <div class="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
                 <a href="{{ route('dashboard.ortu') }}" class="flex items-center gap-2.5" wire:navigate>
-                    <span class="flex size-9 items-center justify-center rounded-xl bg-navy text-orange">
-                        <flux:icon.home-modern class="size-5" />
-                    </span>
-                    <span class="flex flex-col leading-tight">
-                        <span class="text-lg font-semibold text-navy">RuangKelas</span>
+                    <x-school-mark class="size-9 rounded-xl" tone="bg-navy text-orange" icon="home-modern" icon-class="size-5" />
+                    <span class="flex min-w-0 flex-col leading-tight">
+                        <span class="max-w-48 truncate text-lg font-semibold text-navy sm:max-w-none">{{ \App\Models\SchoolProfile::current()->brandName() }}</span>
                         <span class="text-[11px] uppercase tracking-[0.16em] text-ink-soft">Orang tua</span>
                     </span>
                 </a>

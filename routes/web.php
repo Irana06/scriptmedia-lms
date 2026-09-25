@@ -16,6 +16,7 @@ use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
 use App\Livewire\Admin\GuardianManager;
 use App\Livewire\Admin\ReportCards;
+use App\Livewire\Admin\SchoolSettings;
 use App\Livewire\CommunicationManager;
 use App\Livewire\Guardian\GuardianHome;
 use App\Livewire\Student\ActivityCenter;
@@ -88,6 +89,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', ReportCards::class)->name('index');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
+    Route::livewire('admin/profil-sekolah', SchoolSettings::class)
+        ->middleware('role:admin')
+        ->name('admin.school.index');
     Route::livewire('admin/orang-tua', GuardianManager::class)
         ->middleware('role:admin')
         ->name('admin.guardians.index');

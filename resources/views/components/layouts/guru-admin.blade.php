@@ -24,12 +24,10 @@
             >
                 <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3" wire:navigate>
-                        <span class="flex size-10 items-center justify-center rounded-xl bg-orange text-navy shadow-lg shadow-orange/20">
-                            <flux:icon.academic-cap class="size-6" />
-                        </span>
-                        <span>
-                            <span class="block text-lg font-semibold leading-none text-white">RuangKelas</span>
-                            <span class="mt-1 block text-xs uppercase tracking-[0.14em] text-white/60">ScriptMedia LMS</span>
+                        <x-school-mark class="size-10 rounded-xl shadow-lg shadow-orange/20" />
+                        <span class="min-w-0">
+                            <span class="block truncate text-lg font-semibold leading-none text-white">{{ \App\Models\SchoolProfile::current()->brandName() }}</span>
+                            <span class="mt-1 block text-xs uppercase tracking-[0.14em] text-white/60">{{ \App\Models\SchoolProfile::current()->isConfigured() ? 'RuangKelas LMS' : 'ScriptMedia LMS' }}</span>
                         </span>
                     </a>
 
@@ -96,6 +94,14 @@
                             ]) wire:navigate>
                                 <flux:icon.document-text class="size-5" />
                                 Rapor Siswa
+                            </a>
+                            <a href="{{ route('admin.school.index') }}" @class([
+                                'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition',
+                                'bg-white/12 font-semibold text-white' => request()->routeIs('admin.school.*'),
+                                'text-white/70 hover:bg-white/8 hover:text-white' => ! request()->routeIs('admin.school.*'),
+                            ]) wire:navigate>
+                                <flux:icon.building-office-2 class="size-5" />
+                                Profil Sekolah
                             </a>
                         @endrole
                         @role('guru')

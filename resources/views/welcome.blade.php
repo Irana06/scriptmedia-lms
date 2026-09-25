@@ -13,12 +13,10 @@
                     <div class="absolute -bottom-24 -right-20 size-72 rounded-full border-[44px] border-white/5"></div>
                     <div class="relative max-w-xl">
                         <div class="flex items-center gap-3">
-                            <span class="flex size-11 items-center justify-center rounded-xl bg-orange text-navy">
-                                <flux:icon.academic-cap class="size-6" />
-                            </span>
+                            <x-school-mark class="size-11 rounded-xl" />
                             <div>
-                                <p class="text-xl font-semibold">RuangKelas</p>
-                                <p class="text-xs uppercase tracking-[0.18em] text-white/55">ScriptMedia LMS</p>
+                                <p class="text-xl font-semibold">{{ \App\Models\SchoolProfile::current()->brandName() }}</p>
+                                <p class="text-xs uppercase tracking-[0.18em] text-white/55">{{ \App\Models\SchoolProfile::current()->isConfigured() ? 'Portal sekolah · RuangKelas' : 'ScriptMedia LMS' }}</p>
                             </div>
                         </div>
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Grade;
 use App\Models\SchoolClass;
+use App\Models\SchoolProfile;
 use App\Models\Semester;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -43,7 +44,9 @@ class ReportCardController extends Controller
         // Siswa sekolah swasta boleh terdaftar dengan NIS saja, tanpa NISN.
         $identifier = $student->nisn ?: ($student->nis ?: $student->id);
 
-        return Pdf::loadView('pdf.report-card', compact('semester', 'student', 'schoolClass', 'grades', 'attendanceCounts'))
+        $school = SchoolProfile::current();
+
+        return Pdf::loadView('pdf.report-card', compact('semester', 'student', 'schoolClass', 'grades', 'attendanceCounts', 'school'))
             ->setPaper('a4')
             ->download("rapor-{$identifier}-semester-".strtolower($semester->name).'.pdf');
     }

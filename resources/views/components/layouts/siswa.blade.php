@@ -11,10 +11,8 @@
         <header class="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur-md">
             <div class="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
                 <a href="{{ route('dashboard.siswa') }}" class="flex items-center gap-2.5" wire:navigate>
-                    <span class="flex size-9 items-center justify-center rounded-xl bg-navy text-orange">
-                        <flux:icon.academic-cap class="size-5" />
-                    </span>
-                    <span class="text-lg font-semibold text-navy">RuangKelas</span>
+                    <x-school-mark class="size-9 rounded-xl" tone="bg-navy text-orange" icon-class="size-5" />
+                    <span class="max-w-44 truncate text-lg font-semibold text-navy sm:max-w-none">{{ \App\Models\SchoolProfile::current()->brandName() }}</span>
                 </a>
 
                 <nav class="ml-10 hidden items-center gap-1 rounded-full bg-offwhite p-1 md:flex" aria-label="Navigasi siswa">

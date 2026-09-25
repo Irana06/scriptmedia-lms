@@ -16,12 +16,10 @@
                     <div aria-hidden="true" class="absolute -bottom-24 -left-20 size-72 rounded-full bg-tosca/15"></div>
 
                     <a href="{{ route('home') }}" class="relative inline-flex items-center gap-3" wire:navigate>
-                        <span class="flex size-12 items-center justify-center rounded-2xl bg-tosca text-navy shadow-lg shadow-black/10">
-                            <flux:icon.academic-cap class="size-7" />
-                        </span>
+                        <x-school-mark class="size-12 rounded-2xl shadow-lg shadow-black/10" tone="bg-tosca text-navy" icon-class="size-7" />
                         <span>
-                            <span class="block text-xl font-semibold tracking-tight">RuangKelas</span>
-                            <span class="block text-xs text-white/65">Learning Management System</span>
+                            <span class="block text-xl font-semibold tracking-tight">{{ \App\Models\SchoolProfile::current()->brandName() }}</span>
+                            <span class="block text-xs text-white/65">{{ \App\Models\SchoolProfile::current()->isConfigured() ? 'Portal belajar · RuangKelas' : 'Learning Management System' }}</span>
                         </span>
                     </a>
 
@@ -42,10 +40,8 @@
                 <section class="auth-panel flex min-h-[560px] min-w-0 flex-col px-6 py-7 sm:px-12 sm:py-9 lg:min-h-[620px] lg:px-16">
                     <div class="flex items-center justify-between border-b border-line pb-5 lg:hidden">
                         <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5" wire:navigate>
-                            <span class="flex size-10 items-center justify-center rounded-xl bg-navy text-white">
-                                <flux:icon.academic-cap class="size-6" />
-                            </span>
-                            <span class="font-semibold text-navy">RuangKelas</span>
+                            <x-school-mark class="size-10 rounded-xl" tone="bg-navy text-white" />
+                            <span class="font-semibold text-navy">{{ \App\Models\SchoolProfile::current()->brandName() }}</span>
                         </a>
                         <span class="hidden rounded-full bg-tosca-tint px-3 py-1 text-xs font-medium text-tosca-ink sm:inline-flex">Portal sekolah</span>
                     </div>

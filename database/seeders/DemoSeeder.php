@@ -18,6 +18,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
+use App\Models\SchoolProfile;
 use App\Models\Semester;
 use App\Models\Subject;
 use App\Models\User;
@@ -31,6 +32,19 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->call(RoleSeeder::class);
+
+        // Hanya mengisi profil yang masih kosong: seeder ini bisa dijalankan di
+        // server sekolah sungguhan, dan profil asli sekolah tidak boleh tertimpa.
+        if (! SchoolProfile::current()->isConfigured()) {
+            SchoolProfile::current()->update([
+                'name' => 'SMA Nusantara',
+                'npsn' => '20200000',
+                'address' => 'Jl. Pendidikan No. 1',
+                'city' => 'Bandung',
+                'phone' => '022-1234567',
+                'principal_name' => 'Drs. Hendra Wijaya, M.Pd.',
+            ]);
+        }
 
         $admin = $this->user(
             email: 'admin.demo@example.com',
