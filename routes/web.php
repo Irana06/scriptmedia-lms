@@ -2,6 +2,7 @@
 
 use App\Exports\QuizQuestionTemplateExport;
 use App\Http\Controllers\Admin\BackupDownloadController;
+use App\Http\Controllers\Admin\ClassExportController;
 use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\MonitoringController;
@@ -96,6 +97,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // dicek di dalam komponen/controller, bukan lewat middleware role saja.
     Route::middleware('role:admin|guru')->prefix('admin/rapor')->name('admin.report-cards.')->group(function () {
         Route::get('/', ReportCards::class)->name('index');
+        Route::get('{semester}/kelas/{schoolClass}/leger', [ClassExportController::class, 'grades'])->name('ledger');
+        Route::get('{semester}/kelas/{schoolClass}/presensi', [ClassExportController::class, 'attendance'])->name('attendance');
         Route::get('{semester}/{student}', ReportCardController::class)->name('download');
     });
     Route::livewire('admin/cadangan', Backups::class)
