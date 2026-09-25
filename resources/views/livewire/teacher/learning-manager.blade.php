@@ -149,16 +149,17 @@
                         <label class="block text-sm font-semibold text-navy">Dibuka<input wire:model="quizOpenAt" type="datetime-local" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         <label class="block text-sm font-semibold text-navy">Ditutup<input wire:model="quizCloseAt" type="datetime-local" class="mt-2 min-h-11 w-full rounded-xl border border-line px-3" /></label>
                         @error('quizCloseAt') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        <label class="flex items-start gap-3 rounded-xl bg-offwhite p-3 text-sm text-navy"><input type="checkbox" wire:model="quizShuffle" class="mt-0.5 size-4 rounded border-line"><span><strong class="block">Acak soal & pilihan per siswa</strong><span class="text-xs text-ink-soft">Setiap siswa mendapat urutan berbeda — menyulitkan saling contek.</span></span></label>
                         <x-theme.button type="submit" class="w-full">Buat kuis</x-theme.button>
                     </form>
                 </x-theme.card>
                 <div class="space-y-5">
                     @forelse ($selected->quizzes as $quiz)
                         <x-theme.card>
-                            <div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-lg">{{ $quiz->title }}</h3><p class="mt-1 text-sm text-ink-soft">{{ strtoupper($quiz->category) }} · {{ $quiz->duration_minutes }} menit · {{ $quiz->open_at->format('d M H:i') }}–{{ $quiz->close_at->format('d M H:i') }}</p></div><button wire:click="deleteQuiz({{ $quiz->id }})" wire:confirm="Hapus kuis ini?" class="text-sm text-red-600">Hapus</button></div>
+                            <div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-lg">{{ $quiz->title }}</h3><p class="mt-1 text-sm text-ink-soft">{{ strtoupper($quiz->category) }} · {{ $quiz->duration_minutes }} menit · {{ $quiz->open_at->format('d M H:i') }}–{{ $quiz->close_at->format('d M H:i') }}{{ $quiz->shuffle ? ' · diacak' : '' }}</p></div><button wire:click="deleteQuiz({{ $quiz->id }})" wire:confirm="Hapus kuis ini?" class="text-sm text-red-600">Hapus</button></div>
                             <div class="mt-5 space-y-3">
                                 @foreach ($quiz->questions as $question)
-                                    <div class="rounded-2xl bg-offwhite p-4"><div class="flex justify-between gap-3"><p class="text-sm font-semibold text-navy">{{ $loop->iteration }}. {{ $question->question }}</p><button wire:click="deleteQuestion({{ $question->id }})" class="text-xs text-red-600">Hapus</button></div><x-theme.badge tone="neutral" class="mt-2">{{ $question->type === 'mc' ? 'Pilihan ganda' : 'Esai' }}</x-theme.badge></div>
+                                    <div class="rounded-2xl bg-offwhite p-4"><div class="flex justify-between gap-3"><p class="whitespace-pre-line text-sm font-semibold text-navy">{{ $loop->iteration }}. {{ $question->question }}</p><button wire:click="deleteQuestion({{ $question->id }})" wire:confirm="Hapus soal ini?" class="text-xs text-red-600">Hapus</button></div>@if ($question->imageUrl())<img src="{{ $question->imageUrl() }}" alt="" class="mt-2 max-h-32 rounded-lg border border-line object-contain">@endif<x-theme.badge tone="neutral" class="mt-2">{{ $question->type === 'mc' ? 'Pilihan ganda' : 'Esai' }}</x-theme.badge></div>
                                 @endforeach
                             </div>
                             <details class="mt-5 rounded-2xl border border-line p-4" @if($quiz->questions->isEmpty()) open @endif>
@@ -171,9 +172,25 @@
                                             <label class="flex items-center gap-3"><input wire:model="correctChoice" type="radio" value="{{ $index }}" /><input wire:model="choices.{{ $index }}" placeholder="Pilihan {{ chr(65 + $index) }}" class="min-h-11 flex-1 rounded-xl border border-line px-3" /></label>
                                         @endforeach
                                     @endif
+                                    <label class="block text-xs font-semibold text-ink-soft">Gambar soal (opsional, JPG/PNG maks. 2 MB)<input wire:model="questionImage" type="file" accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full text-sm" /></label>
                                     @error('questionText') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                                     @error('choices.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                    <x-theme.button type="button" wire:click="addQuestion({{ $quiz->id }})" variant="outline">Simpan soal</x-theme.button>
+                                    @error('questionImage') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <x-theme.button type="button" wire:click="addQuestion({{ $quiz->id }})" variant="outline" wire:loading.attr="disabled" wire:target="questionImage,addQuestion">Simpan soal</x-theme.button>
+                                </div>
+                            </details>
+                            <details class="mt-3 rounded-2xl border border-line p-4">
+                                <summary class="cursor-pointer text-sm font-semibold text-navy">Impor soal dari Excel</summary>
+                                <div class="mt-4 space-y-3">
+                                    <p class="text-xs text-ink-soft">Kolom: pertanyaan, tipe (PG/Esai), pilihan_a–pilihan_d, kunci (A–D). <a href="{{ route('teacher.quiz-template') }}" class="font-semibold text-tosca-ink">Unduh template</a></p>
+                                    <input wire:model="questionImport" type="file" accept=".xlsx,.xls,.csv" class="block w-full text-sm" />
+                                    @error('questionImport') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <x-theme.button type="button" wire:click="importQuestions({{ $quiz->id }})" variant="outline" wire:loading.attr="disabled" wire:target="questionImport,importQuestions">Impor soal</x-theme.button>
+                                    @if ($importResult && $importResult['failures'] !== [])
+                                        <ul class="space-y-1 rounded-xl bg-orange/10 p-3 text-xs text-navy">
+                                            @foreach ($importResult['failures'] as $failure)<li>{{ $failure }}</li>@endforeach
+                                        </ul>
+                                    @endif
                                 </div>
                             </details>
                             @if ($quiz->attempts->isNotEmpty())

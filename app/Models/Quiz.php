@@ -16,8 +16,9 @@ use Illuminate\Support\Carbon;
  * @property int $duration_minutes
  * @property Carbon $open_at
  * @property Carbon $close_at
+ * @property bool $shuffle
  */
-#[Fillable(['class_subject_id', 'title', 'category', 'duration_minutes', 'open_at', 'close_at'])]
+#[Fillable(['class_subject_id', 'title', 'category', 'duration_minutes', 'open_at', 'close_at', 'shuffle'])]
 class Quiz extends Model
 {
     /** @var list<string> */
@@ -25,7 +26,7 @@ class Quiz extends Model
 
     protected function casts(): array
     {
-        return ['open_at' => 'datetime', 'close_at' => 'datetime'];
+        return ['open_at' => 'datetime', 'close_at' => 'datetime', 'shuffle' => 'boolean'];
     }
 
     /** @return BelongsTo<ClassSubject, $this> */

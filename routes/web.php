@@ -1,5 +1,6 @@
 <?php
 
+use App\Exports\QuizQuestionTemplateExport;
 use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\MonitoringController;
@@ -28,6 +29,7 @@ use App\Livewire\Student\QuizPlayer;
 use App\Livewire\Teacher\EvaluationManager;
 use App\Livewire\Teacher\LearningManager;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -109,6 +111,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('guru/pembelajaran', LearningManager::class)
         ->middleware('role:guru')
         ->name('teacher.learning.index');
+    Route::get('guru/kuis/template-soal', fn () => Excel::download(new QuizQuestionTemplateExport, 'template-soal-kuis.xlsx'))
+        ->middleware('role:guru')
+        ->name('teacher.quiz-template');
     Route::livewire('guru/evaluasi', EvaluationManager::class)
         ->middleware('role:guru')
         ->name('teacher.evaluation.index');

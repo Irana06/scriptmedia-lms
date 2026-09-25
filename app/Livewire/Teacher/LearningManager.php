@@ -10,6 +10,7 @@ use App\Models\Material;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
+use App\Services\QuizQuestionImporter;
 use App\Services\QuizScoringService;
 use App\Support\SchoolNotifier;
 use Illuminate\Database\Eloquent\Builder;
@@ -72,6 +73,15 @@ class LearningManager extends Component
     public string $quizTitle = '';
 
     public string $quizCategory = 'kuis';
+
+    public bool $quizShuffle = true;
+
+    public ?TemporaryUploadedFile $questionImage = null;
+
+    public ?TemporaryUploadedFile $questionImport = null;
+
+    /** @var array{imported: int, failures: list<string>}|null */
+    public ?array $importResult = null;
 
     public string $quizDuration = '30';
 
@@ -257,6 +267,7 @@ class LearningManager extends Component
             'duration_minutes' => $validated['quizDuration'],
             'open_at' => $validated['quizOpenAt'],
             'close_at' => $validated['quizCloseAt'],
+            'shuffle' => $this->quizShuffle,
         ]);
         SchoolNotifier::newQuiz($quiz);
         $this->reset('quizTitle', 'quizOpenAt', 'quizCloseAt');
@@ -278,25 +289,44 @@ class LearningManager extends Component
             $rules['choices.*'] = ['required', 'string', 'max:1000', 'distinct'];
             $rules['correctChoice'] = ['required', 'integer', 'between:0,3'];
         }
-        $this->validate($rules);
+        $rules['questionImage'] = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'];
+        $this->validate($rules, [], ['questionImage' => 'gambar soal']);
 
         DB::transaction(function () use ($quiz): void {
-            $question = $quiz->questions()->create(['question' => $this->questionText, 'type' => $this->questionType]);
+            $question = $quiz->questions()->create([
+                'question' => $this->questionText,
+                'type' => $this->questionType,
+                'image_path' => $this->questionImage?->store("quiz-images/{$quiz->id}", 'public'),
+            ]);
             if ($this->questionType === 'mc') {
                 foreach ($this->choices as $index => $label) {
                     $question->choices()->create(['label' => $label, 'is_correct' => $index === (int) $this->correctChoice]);
                 }
             }
         });
-        $this->reset('questionText');
+        $this->reset('questionText', 'questionImage');
         $this->choices = ['', '', '', ''];
         $this->correctChoice = '0';
+    }
+
+    public function importQuestions(int $quizId, QuizQuestionImporter $importer): void
+    {
+        $quiz = Quiz::query()->findOrFail($quizId);
+        $this->authorizeOwned($quiz->class_subject_id);
+        $this->validate(['questionImport' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120']], [], ['questionImport' => 'berkas soal']);
+
+        $this->importResult = $importer->import($quiz, $this->questionImport);
+        $this->reset('questionImport');
+        session()->flash('learning_status', "{$this->importResult['imported']} soal berhasil diimpor ke \"{$quiz->title}\".");
     }
 
     public function deleteQuestion(int $questionId): void
     {
         $question = QuizQuestion::query()->with('quiz')->findOrFail($questionId);
         $this->authorizeOwned($question->quiz->class_subject_id);
+        if ($question->image_path !== null) {
+            Storage::disk('public')->delete($question->image_path);
+        }
         $question->delete();
     }
 
@@ -314,6 +344,7 @@ class LearningManager extends Component
     {
         $quiz = Quiz::query()->findOrFail($id);
         $this->authorizeOwned($quiz->class_subject_id);
+        Storage::disk('public')->deleteDirectory("quiz-images/{$quiz->id}");
         $quiz->delete();
     }
 

@@ -6,7 +6,10 @@ use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
+use App\Models\QuizChoice;
+use App\Models\QuizQuestion;
 use App\Services\QuizScoringService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -89,6 +92,35 @@ class QuizPlayer extends Component
 
     public function render(): View
     {
-        return view('livewire.student.quiz-player', ['secondsRemaining' => $this->secondsRemaining()]);
+        return view('livewire.student.quiz-player', [
+            'secondsRemaining' => $this->secondsRemaining(),
+            'questions' => $this->orderedQuestions(),
+        ]);
+    }
+
+    /**
+     * Urutan soal dan pilihan diacak per siswa, tapi tetap sama setiap kali
+     * halaman dimuat ulang: acakannya ditentukan dari id percobaan, bukan acak
+     * baru tiap request, supaya jawaban tidak "berpindah" saat siswa refresh.
+     *
+     * @return Collection<int, QuizQuestion>
+     */
+    private function orderedQuestions(): Collection
+    {
+        $questions = $this->quiz->questions;
+
+        if (! $this->quiz->shuffle) {
+            return $questions;
+        }
+
+        $seed = $this->attempt->id;
+
+        return $questions
+            ->sortBy(fn (QuizQuestion $question): int => crc32("{$seed}:q:{$question->id}"))
+            ->values()
+            ->each(fn (QuizQuestion $question) => $question->setRelation(
+                'choices',
+                $question->choices->sortBy(fn (QuizChoice $choice): int => crc32("{$seed}:c:{$choice->id}"))->values(),
+            ));
     }
 }

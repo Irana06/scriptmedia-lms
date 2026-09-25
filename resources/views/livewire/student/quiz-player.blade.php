@@ -7,9 +7,10 @@
             <div class="rounded-xl bg-orange/15 px-4 py-2 text-center"><p class="text-xs font-semibold text-ink-soft">Sisa waktu</p><p class="font-mono text-lg font-bold text-navy" x-text="String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')"></p></div>
         </div>
         <form wire:submit="submitQuiz" class="space-y-4">
-            @foreach ($quiz->questions as $question)
-                <x-theme.card><div class="flex gap-3"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">{{ $loop->iteration }}</span><div class="min-w-0 flex-1"><p class="font-semibold leading-7 text-navy">{{ $question->question }}</p>
-                    @if ($question->type === 'mc')<div class="mt-4 space-y-2">@foreach($question->choices as $choice)<label class="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-3 hover:border-tosca"><input wire:model="answers.{{ $question->id }}" type="radio" value="{{ $choice->id }}" class="mt-1"><span class="text-sm text-ink">{{ $choice->label }}</span></label>@endforeach</div>
+            @foreach ($questions as $question)
+                <x-theme.card wire:key="question-{{ $question->id }}"><div class="flex gap-3"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-navy text-sm font-semibold text-white">{{ $loop->iteration }}</span><div class="min-w-0 flex-1"><p class="whitespace-pre-line font-semibold leading-7 text-navy">{{ $question->question }}</p>
+                    @if ($question->imageUrl())<img src="{{ $question->imageUrl() }}" alt="Gambar soal {{ $loop->iteration }}" class="mt-3 max-h-80 rounded-xl border border-line object-contain" loading="lazy">@endif
+                    @if ($question->type === 'mc')<div class="mt-4 space-y-2">@foreach($question->choices as $choice)<label class="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-3 hover:border-tosca has-[:checked]:border-tosca has-[:checked]:bg-tosca-tint/50"><input wire:model="answers.{{ $question->id }}" type="radio" value="{{ $choice->id }}" class="mt-1"><span class="text-sm text-ink"><strong class="mr-1 text-navy">{{ chr(65 + $loop->index) }}.</strong>{{ $choice->label }}</span></label>@endforeach</div>
                     @else<textarea wire:model="answers.{{ $question->id }}" rows="5" placeholder="Tulis jawabanmu..." class="mt-4 w-full rounded-xl border border-line px-3 py-2"></textarea>@endif
                     @error('answers.'.$question->id) <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div></div></x-theme.card>
