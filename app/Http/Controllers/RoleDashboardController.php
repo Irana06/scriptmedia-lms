@@ -14,6 +14,7 @@ use App\Models\Schedule;
 use App\Models\SchoolClass;
 use App\Models\User;
 use App\Support\SchoolDay;
+use App\Support\SetupChecklist;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class RoleDashboardController extends Controller
             'teacherCount' => User::query()->whereHas('roles', fn ($query) => $query->where('name', 'guru'))->count(),
             'activeClassCount' => SchoolClass::query()->whereHas('academicYear', fn ($query) => $query->where('is_active', true))->count(),
             'pendingGuardianRequests' => GuardianLink::query()->pending()->count(),
+            'setupSteps' => SetupChecklist::steps(),
             'announcements' => Announcement::query()->with('schoolClass', 'creator')->latest()->limit(5)->get(),
             'events' => $this->events(),
         ]);

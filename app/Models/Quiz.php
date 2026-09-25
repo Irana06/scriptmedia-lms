@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
-/** @property int $id @property int $class_subject_id @property string $title @property string $category @property int $duration_minutes @property Carbon $open_at @property Carbon $close_at */
+/**
+ * @property int $id
+ * @property int $class_subject_id
+ * @property string $title
+ * @property string $category
+ * @property int $duration_minutes
+ * @property Carbon $open_at
+ * @property Carbon $close_at
+ */
 #[Fillable(['class_subject_id', 'title', 'category', 'duration_minutes', 'open_at', 'close_at'])]
 class Quiz extends Model
 {

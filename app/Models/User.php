@@ -38,6 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
+ * @property Carbon|null $announcements_seen_at
  * @property string|null $phone
  * @property Carbon|null $updated_at
  */
@@ -57,6 +58,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'announcements_seen_at' => 'datetime',
             'must_change_password' => 'boolean',
             'password' => 'hashed',
         ];
@@ -142,6 +144,17 @@ class User extends Authenticatable implements PasskeyUser
     public function guardianLinks(): HasMany
     {
         return $this->hasMany(GuardianLink::class, 'guardian_id');
+    }
+
+    /**
+     * Orang tua/wali siswa ini yang tautannya sudah disetujui admin.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'guardian_student', 'student_id', 'guardian_id')
+            ->wherePivot('status', GuardianLink::APPROVED);
     }
 
     /**

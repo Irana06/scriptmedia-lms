@@ -19,6 +19,7 @@
                 </a>
 
                 <div class="ml-auto flex items-center gap-2">
+                    <livewire:notification-bell />
                     <a href="{{ route('profile.edit') }}" class="flex size-9 items-center justify-center rounded-full bg-tosca text-xs font-semibold text-navy" aria-label="Buka profil" wire:navigate>
                         {{ auth()->user()?->initials() ?? 'OT' }}
                     </a>

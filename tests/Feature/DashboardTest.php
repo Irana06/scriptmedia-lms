@@ -40,6 +40,20 @@ class DashboardTest extends TestCase
             ->assertDontSee('SMA Nusantara');
     }
 
+    public function test_admin_dashboard_shows_setup_checklist_for_a_new_school(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard.admin'))
+            ->assertSee('Siapkan sekolah Anda')
+            ->assertSee('0 dari 7 langkah selesai');
+
+        SchoolProfile::current()->update(['name' => 'SMP Harapan Bangsa', 'logo_path' => 'branding/logo.png']);
+
+        $this->get(route('dashboard.admin'))->assertSee('1 dari 7 langkah selesai');
+    }
+
     public function test_teacher_is_redirected_to_the_teacher_dashboard(): void
     {
         $teacher = User::factory()->teacher()->create();

@@ -53,7 +53,7 @@
     <table class="signatures">
         <tr>
             <td>&nbsp;<br>Orang Tua/Wali<div class="line">&nbsp;</div></td>
-            <td>{{ $school->city ? $school->city.', ' : '' }}{{ now()->locale('id')->translatedFormat('d F Y') }}<br>Wali Kelas<div class="line">{{ $schoolClass->homeroomTeacher?->name ?? '________________' }}</div>@if($schoolClass->homeroomTeacher?->nip)<div>NIP {{ $schoolClass->homeroomTeacher->nip }}</div>@endif</td>
+            <td>{{ $school->city ? $school->city.', ' : '' }}{{ now()->translatedFormat('d F Y') }}<br>Wali Kelas<div class="line">{{ $schoolClass->homeroomTeacher?->name ?? '________________' }}</div>@if($schoolClass->homeroomTeacher?->nip)<div>NIP {{ $schoolClass->homeroomTeacher->nip }}</div>@endif</td>
         </tr>
         @if($school->principal_name)
             <tr>

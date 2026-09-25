@@ -15,6 +15,7 @@ use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Models\User;
 use App\Support\SchoolDay;
+use App\Support\SchoolNotifier;
 use App\Support\StudentLookup;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -126,6 +127,7 @@ class GuardianHome extends Component
             'relationship' => (string) $validated['relationship'],
             'status' => GuardianLink::PENDING,
         ]);
+        SchoolNotifier::guardianLinkRequested($guardian, $student);
 
         $this->reset('studentIdentifier', 'studentName', 'relationship');
         session()->flash('guardian_status', 'Permintaan terkirim. Sekolah akan memastikan data Anda sebelum jadwal dan kehadiran anak bisa dilihat.');

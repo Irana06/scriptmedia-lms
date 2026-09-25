@@ -11,6 +11,7 @@ use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
 use App\Services\QuizScoringService;
+use App\Support\SchoolNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -186,13 +187,14 @@ class LearningManager extends Component
             'assignmentDescription' => ['nullable', 'string', 'max:5000'],
             'assignmentDeadline' => ['required', 'date', 'after:now'],
         ]);
-        Assignment::query()->create([
+        $assignment = Assignment::query()->create([
             'class_subject_id' => $this->classSubjectId,
             'title' => $validated['assignmentTitle'],
             'category' => $validated['assignmentCategory'],
             'description' => $validated['assignmentDescription'] ?: null,
             'deadline' => $validated['assignmentDeadline'],
         ]);
+        SchoolNotifier::newAssignment($assignment);
         $this->reset('assignmentTitle', 'assignmentDescription', 'assignmentDeadline');
         $this->assignmentCategory = 'tugas';
         session()->flash('learning_status', 'Tugas berhasil dibuat.');
@@ -233,6 +235,7 @@ class LearningManager extends Component
             ['submission_id' => $submission->id],
             ['score' => $validated['gradeScore'], 'feedback' => $validated['gradeFeedback'] ?: null],
         );
+        SchoolNotifier::assignmentGraded($submission, (float) $validated['gradeScore']);
         $this->reset('gradingSubmissionId', 'gradeScore', 'gradeFeedback');
         session()->flash('learning_status', 'Nilai tugas tersimpan.');
     }
@@ -247,7 +250,7 @@ class LearningManager extends Component
             'quizOpenAt' => ['required', 'date'],
             'quizCloseAt' => ['required', 'date', 'after:quizOpenAt'],
         ]);
-        Quiz::query()->create([
+        $quiz = Quiz::query()->create([
             'class_subject_id' => $this->classSubjectId,
             'title' => $validated['quizTitle'],
             'category' => $validated['quizCategory'],
@@ -255,6 +258,7 @@ class LearningManager extends Component
             'open_at' => $validated['quizOpenAt'],
             'close_at' => $validated['quizCloseAt'],
         ]);
+        SchoolNotifier::newQuiz($quiz);
         $this->reset('quizTitle', 'quizOpenAt', 'quizCloseAt');
         $this->quizDuration = '30';
         $this->quizCategory = 'kuis';

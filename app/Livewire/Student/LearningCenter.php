@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ResolvesStudent;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\ClassSubject;
+use App\Support\SchoolNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -68,10 +69,11 @@ class LearningCenter extends Component
             Storage::disk('local')->delete($existing->file_path);
         }
 
-        AssignmentSubmission::query()->updateOrCreate(
+        $submission = AssignmentSubmission::query()->updateOrCreate(
             ['assignment_id' => $assignment->id, 'student_id' => $studentId],
             ['file_path' => $path, 'submitted_at' => now()],
         );
+        SchoolNotifier::assignmentSubmitted($submission);
         $this->reset('submissionFile');
         session()->flash('learning_status', 'Jawaban tugas berhasil dikumpulkan.');
     }

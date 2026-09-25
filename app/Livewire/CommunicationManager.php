@@ -38,6 +38,7 @@ class CommunicationManager extends Component
 
     public function mount(): void
     {
+        Auth::user()?->forceFill(['announcements_seen_at' => now()])->save();
         $this->eventDate = now()->format('Y-m-d');
     }
 

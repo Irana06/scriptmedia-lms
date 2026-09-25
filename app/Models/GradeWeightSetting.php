@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Bobot nilai akhir sekolah: satu baris (id 1), diatur admin di Struktur Akademik.
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $kuis
  * @property float $uts
  * @property float $uas
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 #[Fillable(['tugas', 'kuis', 'uts', 'uas'])]
 class GradeWeightSetting extends Model

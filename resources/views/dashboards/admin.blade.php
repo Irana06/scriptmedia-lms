@@ -11,6 +11,37 @@
                 <flux:icon.arrow-right class="size-5 shrink-0 text-orange-ink" />
             </a>
         @endif
+        @php($doneSteps = $setupSteps->where('done', true)->count())
+        @if ($doneSteps < $setupSteps->count())
+            <x-theme.card data-test="setup-checklist">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-tosca-ink">Siapkan sekolah Anda</p>
+                        <h2 class="mt-1 text-xl">{{ $doneSteps }} dari {{ $setupSteps->count() }} langkah selesai</h2>
+                    </div>
+                    <div class="h-2.5 w-full overflow-hidden rounded-full bg-offwhite sm:w-56" role="progressbar" aria-valuemin="0" aria-valuemax="{{ $setupSteps->count() }}" aria-valuenow="{{ $doneSteps }}">
+                        <div class="h-full rounded-full bg-tosca transition-all" style="width: {{ round($doneSteps / $setupSteps->count() * 100) }}%"></div>
+                    </div>
+                </div>
+                <ol class="mt-5 grid gap-2 md:grid-cols-2">
+                    @foreach ($setupSteps as $step)
+                        <li>
+                            <a href="{{ $step['url'] }}" wire:navigate @class(['flex items-start gap-3 rounded-xl border px-4 py-3 transition', 'border-line bg-offwhite/60' => $step['done'], 'border-line bg-white hover:border-tosca' => ! $step['done']])>
+                                @if ($step['done'])
+                                    <flux:icon.check-circle variant="solid" class="mt-0.5 size-5 shrink-0 text-tosca" />
+                                @else
+                                    <span class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-line text-[10px] font-semibold text-ink-soft">{{ $loop->iteration }}</span>
+                                @endif
+                                <span class="min-w-0">
+                                    <span @class(['block text-sm font-semibold', 'text-ink-soft line-through decoration-ink-soft/40' => $step['done'], 'text-navy' => ! $step['done']])>{{ $step['label'] }}</span>
+                                    @unless ($step['done'])<span class="mt-0.5 block text-xs text-ink-soft">{{ $step['hint'] }}</span>@endunless
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ol>
+            </x-theme.card>
+        @endif
         <div class="grid gap-4 sm:grid-cols-3"><x-theme.card><p class="text-sm text-ink-soft">Siswa terdaftar</p><p class="mt-2 text-3xl font-semibold text-navy">{{ $studentCount }}</p></x-theme.card><x-theme.card><p class="text-sm text-ink-soft">Guru aktif</p><p class="mt-2 text-3xl font-semibold text-navy">{{ $teacherCount }}</p></x-theme.card><x-theme.card><p class="text-sm text-ink-soft">Kelas tahun aktif</p><p class="mt-2 text-3xl font-semibold text-navy">{{ $activeClassCount }}</p></x-theme.card></div>
         <div class="grid gap-6 lg:grid-cols-[1.2fr_.8fr]"><x-theme.card :padding="false" class="overflow-hidden"><div class="flex items-center justify-between border-b border-line px-5 py-5 sm:px-6"><h2 class="text-xl">Pengumuman terbaru</h2><a href="{{ route('communications.index') }}" class="text-sm font-semibold text-tosca" wire:navigate>Kelola</a></div><div class="divide-y divide-line">@forelse($announcements as $item)<article class="px-5 py-4 sm:px-6"><div class="flex justify-between gap-3"><h3 class="font-semibold text-navy">{{ $item->title }}</h3><x-theme.badge tone="neutral">{{ $item->target==='all'?'Semua':$item->schoolClass?->name }}</x-theme.badge></div><p class="mt-2 line-clamp-2 text-sm leading-6 text-ink-soft">{{ $item->body }}</p></article>@empty<div class="p-10 text-center text-sm text-ink-soft">Belum ada pengumuman.</div>@endforelse</div></x-theme.card><x-theme.card><div class="flex items-center justify-between"><h2 class="text-xl">Agenda terdekat</h2><flux:icon.calendar-days class="size-6 text-tosca" /></div><div class="mt-5 space-y-4">@forelse($events as $event)<div class="flex gap-3"><span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange/15 text-sm font-semibold text-navy">{{ $event->date->format('d') }}</span><div><p class="text-sm font-semibold text-navy">{{ $event->title }}</p><p class="mt-0.5 text-xs text-ink-soft">{{ $event->date->translatedFormat('d F Y') }}</p></div></div>@empty<p class="text-sm text-ink-soft">Belum ada agenda mendatang.</p>@endforelse</div></x-theme.card></div>
     </div>
