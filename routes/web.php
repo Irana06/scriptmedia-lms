@@ -14,6 +14,7 @@ use App\Http\Controllers\LearningFileController;
 use App\Http\Controllers\RoleDashboardController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\WebManifestController;
 use App\Livewire\Admin\AcademicSetup;
 use App\Livewire\Admin\AccountImport;
 use App\Livewire\Admin\ClassPromotion;
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('manifest.webmanifest', WebManifestController::class)->name('manifest');
 
 Route::middleware('guest')->group(function () {
     Route::post('demo/login/{role}', DemoLoginController::class)
