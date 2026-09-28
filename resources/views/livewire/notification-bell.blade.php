@@ -27,37 +27,31 @@
         </div>
 
         <div class="max-h-96 divide-y divide-line overflow-y-auto">
-            @if ($newAnnouncements > 0)
-                <button type="button" wire:click="openAnnouncements" class="flex w-full items-start gap-3 bg-orange/5 px-4 py-3 text-left transition hover:bg-offwhite">
-                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-orange/15 text-orange-ink"><flux:icon.megaphone class="size-4" /></span>
-                    <span class="min-w-0">
-                        <span class="block text-sm font-semibold text-navy">{{ $newAnnouncements }} pengumuman baru</span>
-                        <span class="block text-xs text-ink-soft">Ketuk untuk membaca</span>
-                    </span>
-                </button>
-            @endif
-
-            @forelse ($notifications as $notification)
-                <button type="button" wire:click="open('{{ $notification->id }}')" @class(['flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-offwhite', 'bg-tosca-tint/40' => $notification->read_at === null])>
-                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-tosca-tint text-tosca-ink">
-                        <flux:icon :name="$notification->data['icon'] ?? 'bell'" class="size-4" />
+            @forelse ($items as $item)
+                <button
+                    type="button"
+                    wire:key="{{ $item['key'] }}"
+                    @if ($item['argument'] !== null) wire:click="{{ $item['action'] }}('{{ $item['argument'] }}')" @else wire:click="{{ $item['action'] }}" @endif
+                    @class(['flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-offwhite', 'bg-tosca-tint/40' => $item['unread']])
+                >
+                    <span @class(['flex size-9 shrink-0 items-center justify-center rounded-xl', 'bg-orange/15 text-orange-ink' => $item['icon'] === 'megaphone', 'bg-tosca-tint text-tosca-ink' => $item['icon'] !== 'megaphone'])>
+                        <flux:icon :name="$item['icon']" class="size-4" />
                     </span>
                     <span class="min-w-0 flex-1">
-                        <span class="block text-sm font-semibold text-navy">{{ $notification->data['title'] ?? 'Notifikasi' }}</span>
-                        <span class="mt-0.5 block line-clamp-2 text-xs text-ink-soft">{{ $notification->data['body'] ?? '' }}</span>
-                        <span class="mt-1 block text-[11px] text-ink-soft/80">{{ $notification->created_at?->diffForHumans() }}</span>
+                        @if ($item['label'])<span class="block text-[11px] font-semibold uppercase tracking-wide text-orange-ink">{{ $item['label'] }}</span>@endif
+                        <span class="block text-sm font-semibold text-navy">{{ $item['title'] }}</span>
+                        <span class="mt-0.5 block line-clamp-2 text-xs text-ink-soft">{{ $item['body'] }}</span>
+                        <span class="mt-1 block text-[11px] text-ink-soft/80">{{ $item['time']?->diffForHumans() }}</span>
                     </span>
-                    @if ($notification->read_at === null)
+                    @if ($item['unread'])
                         <span class="mt-1.5 size-2 shrink-0 rounded-full bg-orange" aria-label="Belum dibaca"></span>
                     @endif
                 </button>
             @empty
-                @if ($newAnnouncements === 0)
-                    <div class="px-4 py-10 text-center">
-                        <flux:icon.bell-slash class="mx-auto size-8 text-ink-soft/60" />
-                        <p class="mt-2 text-sm text-ink-soft">Belum ada notifikasi.</p>
-                    </div>
-                @endif
+                <div class="px-4 py-10 text-center">
+                    <flux:icon.bell-slash class="mx-auto size-8 text-ink-soft/60" />
+                    <p class="mt-2 text-sm text-ink-soft">Belum ada notifikasi.</p>
+                </div>
             @endforelse
         </div>
     </div>

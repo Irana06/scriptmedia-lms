@@ -89,9 +89,30 @@ class NotificationBellTest extends TestCase
 
         $this->actingAs($student);
         Livewire::test(NotificationBell::class)
-            ->assertSee('1 pengumuman baru')
+            ->assertSee('Libur')
+            ->assertDontSee('Kelas lain')
+            ->assertSeeHtml('data-test="notification-count"')
             ->call('markAllRead')
-            ->assertDontSee('pengumuman baru');
+            ->assertSee('Libur')
+            ->assertDontSeeHtml('data-test="notification-count"');
+    }
+
+    public function test_opened_announcement_stays_in_the_list_as_read(): void
+    {
+        [$teacher, $student] = $this->context();
+        $student->forceFill(['created_at' => now()->subWeek()])->save();
+        Announcement::query()->create(['title' => 'Ujian Tengah Semester', 'body' => 'Mulai Senin.', 'target' => 'all', 'created_by' => $teacher->id]);
+
+        $this->actingAs($student);
+        Livewire::test(NotificationBell::class)
+            ->assertSee('Ujian Tengah Semester')
+            ->call('openAnnouncements')
+            ->assertRedirect(route('dashboard.siswa'));
+
+        Livewire::test(NotificationBell::class)
+            ->assertSee('Ujian Tengah Semester')
+            ->assertDontSeeHtml('aria-label="Belum dibaca"')
+            ->assertDontSeeHtml('data-test="notification-count"');
     }
 
     public function test_guardian_link_request_notifies_admins(): void

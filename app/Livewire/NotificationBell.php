@@ -2,14 +2,19 @@
 
 namespace App\Livewire;
 
+use App\Models\Announcement;
 use App\Models\User;
 use App\Support\AnnouncementAudience;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
 
 class NotificationBell extends Component
 {
+    private const FEED_SIZE = 10;
+
     public function open(string $id): void
     {
         $notification = $this->user()->notifications()->findOrFail($id);
@@ -41,12 +46,48 @@ class NotificationBell extends Component
         $newAnnouncements = AnnouncementAudience::visibleTo($user)
             ->when($seenSince, fn ($query) => $query->where('created_at', '>', $seenSince))
             ->count();
-        $unread = $user->unreadNotifications()->count();
+
+        // Pengumuman tampil satu per satu bersama notifikasi lain dan tetap ada
+        // setelah dibaca (hanya tanda "belum dibaca" yang hilang), sama seperti
+        // notifikasi tugas. Dulu hanya satu baris ringkas yang hilang saat diklik.
+        $announcements = AnnouncementAudience::visibleTo($user)
+            ->latest()
+            ->limit(self::FEED_SIZE)
+            ->get()
+            ->map(fn (Announcement $announcement): array => [
+                'key' => "announcement-{$announcement->id}",
+                'action' => 'openAnnouncements',
+                'argument' => null,
+                'title' => $announcement->title,
+                'body' => Str::limit($announcement->body, 120),
+                'icon' => 'megaphone',
+                'label' => 'Pengumuman',
+                'time' => $announcement->created_at,
+                'unread' => $seenSince === null || $announcement->created_at?->gt($seenSince) === true,
+            ]);
+
+        $notifications = $user->notifications()
+            ->latest()
+            ->limit(self::FEED_SIZE)
+            ->get()
+            ->map(fn (DatabaseNotification $notification): array => [
+                'key' => "notification-{$notification->id}",
+                'action' => 'open',
+                'argument' => (string) $notification->id,
+                'title' => (string) ($notification->data['title'] ?? 'Notifikasi'),
+                'body' => (string) ($notification->data['body'] ?? ''),
+                'icon' => (string) ($notification->data['icon'] ?? 'bell'),
+                'label' => null,
+                'time' => $notification->created_at,
+                'unread' => $notification->read_at === null,
+            ]);
 
         return view('livewire.notification-bell', [
-            'notifications' => $user->notifications()->latest()->limit(8)->get(),
-            'newAnnouncements' => $newAnnouncements,
-            'unreadTotal' => $unread + $newAnnouncements,
+            'items' => $announcements->concat($notifications)
+                ->sortByDesc(fn (array $item): int => $item['time']?->getTimestamp() ?? 0)
+                ->take(self::FEED_SIZE)
+                ->values(),
+            'unreadTotal' => $user->unreadNotifications()->count() + $newAnnouncements,
         ]);
     }
 
