@@ -23,47 +23,35 @@ class NotificationBell extends Component
         $this->redirect((string) ($notification->data['url'] ?? route('dashboard')), navigate: true);
     }
 
-    public function openAnnouncements(): void
-    {
-        $user = $this->user();
-        $user->forceFill(['announcements_seen_at' => now()])->save();
-
-        $this->redirect(AnnouncementAudience::readingRoute($user), navigate: true);
-    }
-
     public function markAllRead(): void
     {
         $user = $this->user();
         $user->unreadNotifications()->update(['read_at' => now()]);
+        // Batas "semua sudah dibaca": tidak perlu satu baris per pengumuman.
         $user->forceFill(['announcements_seen_at' => now()])->save();
     }
 
     public function render(): View
     {
         $user = $this->user();
-        // Akun baru tidak dibanjiri pengumuman lama yang terbit sebelum akunnya ada.
-        $seenSince = $user->announcements_seen_at ?? $user->created_at;
-        $newAnnouncements = AnnouncementAudience::visibleTo($user)
-            ->when($seenSince, fn ($query) => $query->where('created_at', '>', $seenSince))
-            ->count();
+        $unreadAnnouncementIds = AnnouncementAudience::visibleTo($user)->unreadBy($user)->pluck('id')->all();
 
-        // Pengumuman tampil satu per satu bersama notifikasi lain dan tetap ada
-        // setelah dibaca (hanya tanda "belum dibaca" yang hilang), sama seperti
-        // notifikasi tugas. Dulu hanya satu baris ringkas yang hilang saat diklik.
+        // Setiap pengumuman adalah tautan ke halamannya sendiri; baru dianggap
+        // dibaca saat halaman itu dibuka (lihat AnnouncementController).
         $announcements = AnnouncementAudience::visibleTo($user)
             ->latest()
             ->limit(self::FEED_SIZE)
             ->get()
             ->map(fn (Announcement $announcement): array => [
                 'key' => "announcement-{$announcement->id}",
-                'action' => 'openAnnouncements',
-                'argument' => null,
+                'url' => route('announcements.show', $announcement),
+                'notificationId' => null,
                 'title' => $announcement->title,
                 'body' => Str::limit($announcement->body, 120),
                 'icon' => 'megaphone',
                 'label' => 'Pengumuman',
                 'time' => $announcement->created_at,
-                'unread' => $seenSince === null || $announcement->created_at?->gt($seenSince) === true,
+                'unread' => in_array($announcement->id, $unreadAnnouncementIds, true),
             ]);
 
         $notifications = $user->notifications()
@@ -72,8 +60,8 @@ class NotificationBell extends Component
             ->get()
             ->map(fn (DatabaseNotification $notification): array => [
                 'key' => "notification-{$notification->id}",
-                'action' => 'open',
-                'argument' => (string) $notification->id,
+                'url' => null,
+                'notificationId' => (string) $notification->id,
                 'title' => (string) ($notification->data['title'] ?? 'Notifikasi'),
                 'body' => (string) ($notification->data['body'] ?? ''),
                 'icon' => (string) ($notification->data['icon'] ?? 'bell'),
@@ -87,7 +75,7 @@ class NotificationBell extends Component
                 ->sortByDesc(fn (array $item): int => $item['time']?->getTimestamp() ?? 0)
                 ->take(self::FEED_SIZE)
                 ->values(),
-            'unreadTotal' => $user->unreadNotifications()->count() + $newAnnouncements,
+            'unreadTotal' => $user->unreadNotifications()->count() + count($unreadAnnouncementIds),
         ]);
     }
 

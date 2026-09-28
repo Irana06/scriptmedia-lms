@@ -232,13 +232,14 @@
             <div class="border-b border-line px-5 py-5 sm:px-6"><h3 class="text-xl">Pengumuman</h3></div>
             <div class="divide-y divide-line">
                 @forelse ($overview['announcements'] as $announcement)
-                    <div class="px-5 py-4 sm:px-6">
+                    <a href="{{ route('announcements.show', $announcement) }}" class="block px-5 py-4 transition hover:bg-offwhite sm:px-6" wire:navigate>
                         <div class="flex flex-wrap justify-between gap-2">
                             <p class="font-semibold text-navy">{{ $announcement->title }}</p>
                             <x-theme.badge :tone="$announcement->target === 'all' ? 'navy' : 'orange'">{{ $announcement->target === 'all' ? 'Sekolah' : $announcement->schoolClass?->name }}</x-theme.badge>
                         </div>
-                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-ink-soft">{{ $announcement->body }}</p>
-                    </div>
+                        <p class="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-ink-soft">{{ $announcement->body }}</p>
+                        <p class="mt-2 text-xs font-semibold text-tosca-ink">Buka pengumuman →</p>
+                    </a>
                 @empty
                     <div class="p-10 text-center text-sm text-ink-soft">Belum ada pengumuman.</div>
                 @endforelse

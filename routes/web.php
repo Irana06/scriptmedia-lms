@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ImportCredentialsController;
 use App\Http\Controllers\Admin\ImportTemplateController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\ReportCardController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GuardianRegistrationController;
 use App\Http\Controllers\Auth\RequiredPasswordController;
@@ -58,6 +59,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardRedirectController::class)->name('dashboard');
+    Route::get('pengumuman/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
     Route::get('berkas/materi/{materialFile}', [LearningFileController::class, 'material'])->name('learning.files.material');
     Route::get('berkas/tugas/{submission}', [LearningFileController::class, 'submission'])->name('learning.files.submission');
 

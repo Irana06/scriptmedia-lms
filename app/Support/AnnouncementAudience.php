@@ -38,12 +38,13 @@ class AnnouncementAudience
             ->orWhere(fn (Builder $class): Builder => $class->where('target', 'class')->whereIn('class_id', $classIds)));
     }
 
-    public static function readingRoute(User $user): string
+    /** Halaman berisi semua pengumuman untuk peran pengguna. */
+    public static function listRoute(User $user): string
     {
         return match (true) {
             $user->hasAnyRole(['admin', 'guru']) => route('communications.index'),
             $user->hasRole('ortu') => route('dashboard.ortu'),
-            default => route('dashboard.siswa'),
+            default => route('student.activities.index', ['tab' => 'info']),
         };
     }
 }

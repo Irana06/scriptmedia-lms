@@ -28,10 +28,9 @@
 
         <div class="max-h-96 divide-y divide-line overflow-y-auto">
             @forelse ($items as $item)
-                <button
-                    type="button"
+                <{{ $item['url'] ? 'a' : 'button' }}
                     wire:key="{{ $item['key'] }}"
-                    @if ($item['argument'] !== null) wire:click="{{ $item['action'] }}('{{ $item['argument'] }}')" @else wire:click="{{ $item['action'] }}" @endif
+                    @if ($item['url']) href="{{ $item['url'] }}" wire:navigate @else type="button" wire:click="open('{{ $item['notificationId'] }}')" @endif
                     @class(['flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-offwhite', 'bg-tosca-tint/40' => $item['unread']])
                 >
                     <span @class(['flex size-9 shrink-0 items-center justify-center rounded-xl', 'bg-orange/15 text-orange-ink' => $item['icon'] === 'megaphone', 'bg-tosca-tint text-tosca-ink' => $item['icon'] !== 'megaphone'])>
@@ -46,7 +45,7 @@
                     @if ($item['unread'])
                         <span class="mt-1.5 size-2 shrink-0 rounded-full bg-orange" aria-label="Belum dibaca"></span>
                     @endif
-                </button>
+                </{{ $item['url'] ? 'a' : 'button' }}>
             @empty
                 <div class="px-4 py-10 text-center">
                     <flux:icon.bell-slash class="mx-auto size-8 text-ink-soft/60" />

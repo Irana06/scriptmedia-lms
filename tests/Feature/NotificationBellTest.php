@@ -97,22 +97,25 @@ class NotificationBellTest extends TestCase
             ->assertDontSeeHtml('data-test="notification-count"');
     }
 
-    public function test_opened_announcement_stays_in_the_list_as_read(): void
+    public function test_announcement_links_to_its_page_and_only_that_one_becomes_read(): void
     {
         [$teacher, $student] = $this->context();
         $student->forceFill(['created_at' => now()->subWeek()])->save();
-        Announcement::query()->create(['title' => 'Ujian Tengah Semester', 'body' => 'Mulai Senin.', 'target' => 'all', 'created_by' => $teacher->id]);
+        $exam = Announcement::query()->create(['title' => 'Ujian Tengah Semester', 'body' => 'Mulai Senin.', 'target' => 'all', 'created_by' => $teacher->id]);
+        Announcement::query()->create(['title' => 'Class Meeting', 'body' => 'Jumat depan.', 'target' => 'all', 'created_by' => $teacher->id]);
 
         $this->actingAs($student);
         Livewire::test(NotificationBell::class)
-            ->assertSee('Ujian Tengah Semester')
-            ->call('openAnnouncements')
-            ->assertRedirect(route('dashboard.siswa'));
+            ->assertSeeHtml('href="'.route('announcements.show', $exam).'"')
+            ->assertViewHas('unreadTotal', 2);
+
+        // Klik di lonceng belum menandai apa pun; membuka halamannya yang menandai.
+        $this->get(route('announcements.show', $exam))->assertOk()->assertSee('Mulai Senin.');
 
         Livewire::test(NotificationBell::class)
             ->assertSee('Ujian Tengah Semester')
-            ->assertDontSeeHtml('aria-label="Belum dibaca"')
-            ->assertDontSeeHtml('data-test="notification-count"');
+            ->assertSee('Class Meeting')
+            ->assertViewHas('unreadTotal', 1);
     }
 
     public function test_guardian_link_request_notifies_admins(): void
