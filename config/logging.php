@@ -62,6 +62,8 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            // Bisa ditulis grup: web server dan cron (user berbeda, grup sama) memakai log yang sama.
+            'permission' => 0664,
             'replace_placeholders' => true,
         ],
 
@@ -69,6 +71,8 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            // Bisa ditulis grup: web server dan cron (user berbeda, grup sama) memakai log yang sama.
+            'permission' => 0664,
             'max_files' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
@@ -77,6 +81,8 @@ return [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            // Bisa ditulis grup: web server dan cron (user berbeda, grup sama) memakai log yang sama.
+            'permission' => 0664,
             'max_files' => 3,
             'replace_placeholders' => true,
         ],
