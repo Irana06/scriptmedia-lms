@@ -55,6 +55,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Isi 127.0.0.1 bila aplikasi berada di belakang reverse proxy lokal (mis.
+    | Cloudflare Tunnel -> Nginx) supaya URL dibuat https. Kosong berarti tidak
+    | ada proxy yang dipercaya, sehingga header X-Forwarded-For palsu tidak bisa
+    | dipakai mengakali pembatasan percobaan login.
+    |
+    */
+
+    'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

@@ -9,6 +9,7 @@ use App\Models\SchoolProfile;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -69,6 +70,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        $trustedProxies = config('app.trusted_proxies');
+        if (is_array($trustedProxies) && $trustedProxies !== []) {
+            TrustProxies::at($trustedProxies);
+        }
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
