@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+Full project documentation (Indonesian) lives in `README.md` and `docs/`: architecture, development, deployment (cPanel in `DEPLOY.md`, VPS in `docs/deploy-vps.md`), operations, and the handover notes in `docs/serah-terima.md`. Keep them updated when behavior changes.
+
 ## Project Structure & Module Organization
 
 This Laravel 13 application targets PHP 8.4 locally (with `composer.json` allowing PHP 8.3+) and uses class-based Livewire 4, Flux, Tailwind CSS 4, and Vite. Keep domain code in `app/`, routes in `routes/`, Blade templates in `resources/views/`, JavaScript in `resources/js/`, and styles in `resources/css/`. Migrations, factories, and seeders belong under `database/`. Put workflow coverage in `tests/Feature/` and isolated logic tests in `tests/Unit/`. Treat `public/build/` as generated output.
