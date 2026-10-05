@@ -166,6 +166,48 @@ class AccountImportTest extends TestCase
         $this->assertTrue($student->hasRole('siswa'));
     }
 
+    public function test_student_imported_with_nis_is_updated_not_duplicated_when_nisn_arrives_later(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+        $headings = ['nama', 'nisn', 'nis', 'nik', 'jenis_kelamin', 'kelas'];
+
+        $this->actingAs($admin);
+        $this->runImport('siswa', $this->spreadsheet($headings, [['Siswa Baru', '', '2024001', '', 'L', '7A']]));
+
+        // Beberapa bulan kemudian NISN terbit di Dapodik dan operator mengimpor ulang.
+        $import = $this->runImport('siswa', $this->spreadsheet($headings, [['Siswa Baru', '0099123456', '2024001', '', 'L', '7A']]));
+
+        $this->assertSame(1, $import->success_count, json_encode($import->failures) ?: '');
+        $this->assertSame(1, User::query()->where('nis', '2024001')->count());
+        $student = User::query()->where('nis', '2024001')->firstOrFail();
+        $this->assertSame('0099123456', $student->nisn);
+        $this->assertSame('0099123456', $student->username);
+        $this->assertSame(1, $student->schoolClasses()->count());
+    }
+
+    public function test_row_whose_nisn_and_nis_belong_to_two_different_students_is_rejected(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $year = AcademicYear::query()->create(['year_label' => '2026/2027', 'is_active' => true]);
+        SchoolClass::query()->create(['academic_year_id' => $year->id, 'name' => '7A']);
+        $headings = ['nama', 'nisn', 'nis', 'nik', 'jenis_kelamin', 'kelas'];
+
+        $this->actingAs($admin);
+        $this->runImport('siswa', $this->spreadsheet($headings, [
+            ['Siswa Satu', '0099000011', '', '', 'L', '7A'],
+            ['Siswa Dua', '', '2024002', '', 'P', '7A'],
+        ]));
+
+        $import = $this->runImport('siswa', $this->spreadsheet($headings, [['Siswa Campur', '0099000011', '2024002', '', 'L', '7A']]));
+
+        $this->assertSame(0, $import->success_count);
+        $this->assertStringContainsString('dua akun berbeda', (string) json_encode($import->failures));
+    }
+
     public function test_student_row_without_any_identifier_is_rejected(): void
     {
         Storage::fake('local');

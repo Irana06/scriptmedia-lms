@@ -127,12 +127,23 @@ class AccountImportService
             throw new RuntimeException("Kelas {$values['class']} tidak ditemukan pada tahun ajaran aktif.");
         }
 
-        return DB::transaction(function () use ($values, $login, $activeYear, $schoolClass): array {
-            $user = User::query()
-                ->where(function ($query) use ($login): void {
-                    $query->where('username', $login)->orWhere('nisn', $login)->orWhere('nis', $login);
+        // Cari dengan NISN dan NIS sekaligus: siswa yang dulu diimpor hanya dengan NIS
+        // (NISN belum terbit) harus dikenali saat diimpor ulang dengan NISN-nya.
+        $identifiers = array_values(array_filter([$values['nisn'], $values['nis']], fn (string $value): bool => $value !== ''));
+
+        return DB::transaction(function () use ($values, $login, $identifiers, $activeYear, $schoolClass): array {
+            $matches = User::query()
+                ->where(function ($query) use ($identifiers): void {
+                    $query->whereIn('username', $identifiers)->orWhereIn('nisn', $identifiers)->orWhereIn('nis', $identifiers);
                 })
-                ->first();
+                ->limit(2)
+                ->get();
+
+            if ($matches->count() > 1) {
+                throw new RuntimeException('NISN dan NIS pada baris ini cocok dengan dua akun berbeda. Periksa data siswa tersebut.');
+            }
+
+            $user = $matches->first();
 
             if ($user && $user->roles()->exists() && ! $user->hasRole('siswa')) {
                 throw new RuntimeException('NISN/NIS sudah digunakan akun non-siswa.');
