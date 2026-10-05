@@ -5,34 +5,43 @@
 Buka **Terminal** di cPanel. **Setiap kali membuka terminal baru**, aktifkan dulu lingkungannya:
 
 ```bash
-source ~/activate.sh        # berkas di home direktori cPanel (tidak ada di repo); menyiapkan $PHP84
+source ~/school/lms-engine/scripts/activate.sh
 cd ~/school/lms-engine
 ```
 
-Tanpa `source activate.sh`, `$PHP84` kosong dan perintah di bawah gagal. Di server ini `php` bukan
-PHP 8.4, jadi **semua perintah artisan memakai `$PHP84`**:
+`activate.sh` mengisi dua variabel, karena `php` bawaan server ini bukan PHP 8.4:
+
+| Variabel | Isi | Dipakai untuk |
+|---|---|---|
+| `$PHP84` | `/opt/alt/php84/usr/bin/php` | **semua** perintah artisan |
+| `$COMPOSER84` | `$PHP84 /usr/local/bin/composer` | **semua** perintah composer |
 
 ```bash
 $PHP84 artisan migrate --force
 $PHP84 artisan sekolah:admin-password admin@sekolah.sch.id
-$PHP84 artisan sekolah:backup
+$COMPOSER84 install --no-dev --optimize-autoloader
 ```
+
+Tanpa `source activate.sh`, kedua variabel kosong dan perintah di atas gagal. (Dulu dipakai berkas
+yang sama di folder project e-commerce `scriptm1/scriptmedia-ecommerxe/activate.sh`; sekarang LMS punya
+salinannya sendiri di `scripts/activate.sh`.)
 
 **Deploy versi baru** (di PC: `git push origin master` dulu):
 
 ```bash
-PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
+bash ~/school/lms-engine/scripts/server-deploy.sh
 ```
 
-Skrip ini menarik kode, menjalankan migrasi, dan membangun cache. Skrip juga berhenti sendiri bila
-`DB_CONNECTION` bukan `mysql` atau ada berkas yang diubah langsung di server. Rinciannya, termasuk
+Skrip ini mengaktifkan `activate.sh` sendiri, menarik kode, memasang dependensi dengan `$COMPOSER84`
+bila `composer.lock` berubah, menjalankan migrasi, dan membangun cache. Skrip berhenti sendiri bila
+PHP bukan 8.3+, `DB_CONNECTION` bukan `mysql`, atau ada berkas yang diubah langsung di server. Rinciannya, termasuk
 larangan `route:cache`/`optimize` di subfolder `/lms`, ada di [../DEPLOY.md](../DEPLOY.md).
 
 **Cron cadangan otomatis** (cPanel → *Cron Jobs* → *Once Per Minute*). Cron tidak membaca
-`activate.sh`, jadi lingkungannya diaktifkan di perintah itu sendiri:
+`activate.sh` dengan sendirinya, jadi diaktifkan di perintah itu:
 
 ```bash
-source ~/activate.sh && cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
+source ~/school/lms-engine/scripts/activate.sh && cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
 ```
 
 **Instalasi sekolah baru**: setelah migrasi pertama, jalankan `$PHP84 artisan sekolah:setup`.
@@ -73,7 +82,7 @@ artisan sekolah:admin-password [email]            # admin lupa password
 artisan sekolah:setup                             # tambah admin / instalasi baru
 ```
 
-(Di cPanel awali dengan `$PHP84`, di VPS dengan `php`.)
+(Di cPanel awali dengan `$PHP84` dan composer dengan `$COMPOSER84`; di VPS cukup `php`/`composer`.)
 
 ## Pemecahan masalah
 

@@ -3,8 +3,8 @@
 # Deploy di server: ambil kode terbaru dengan git pull, lalu jalankan semua
 # langkah Laravel dengan urutan yang benar.
 #
-#   PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
-#   PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh --demo
+#   bash ~/school/lms-engine/scripts/server-deploy.sh
+#   bash ~/school/lms-engine/scripts/server-deploy.sh --demo
 #
 # --demo     sekalian menjalankan DemoSeeder (aman diulang)
 # --no-pull  lewati git pull, misalnya bila kode sudah diperbarui manual
@@ -14,7 +14,17 @@
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# PHP bawaan server cPanel bukan 8.4. Bila terminal belum menjalankan
+# `source scripts/activate.sh`, aktifkan di sini supaya PHP dan Composer
+# tidak diam-diam memakai versi yang salah.
+if [ -z "${PHP84:-}" ] && [ -f "$APP_DIR/scripts/activate.sh" ]; then
+    # shellcheck source=/dev/null
+    . "$APP_DIR/scripts/activate.sh"
+fi
+
 PHP_BIN="${PHP84:-php}"
+COMPOSER_CMD="${COMPOSER84:-composer}"
 EXPECT_DB="${EXPECT_DB:-mysql}"
 SKIP_HEALTHCHECK="${SKIP_HEALTHCHECK:-0}"
 COMPOSER_CHANGED="${COMPOSER_CHANGED:-0}"
@@ -76,9 +86,14 @@ fi
 db_connection="$(env_value DB_CONNECTION)"
 echo "Folder        : $APP_DIR"
 echo "Commit        : $(git rev-parse --short HEAD 2>/dev/null || echo '-')"
-echo "PHP           : $("$PHP_BIN" -r 'echo PHP_VERSION;')"
+echo "PHP           : $("$PHP_BIN" -r 'echo PHP_VERSION;') ($PHP_BIN)"
 echo "DB_CONNECTION : ${db_connection:-(kosong)}"
 echo "Composer      : $([ "$COMPOSER_CHANGED" = "1" ] && echo 'perlu install (composer.lock berubah)' || echo 'tidak berubah')"
+
+if ! "$PHP_BIN" -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);'; then
+    echo "Berhenti: aplikasi butuh PHP 8.3+, tetapi $PHP_BIN versi lama. Jalankan 'source scripts/activate.sh' atau isi PHP84." >&2
+    exit 1
+fi
 
 # Pengingat yang diminta: pastikan server memakai database yang benar sebelum migrasi.
 if [ "$db_connection" != "$EXPECT_DB" ]; then
@@ -105,13 +120,14 @@ trap 'artisan up >/dev/null 2>&1 || true' EXIT
 if [ "$COMPOSER_CHANGED" = "1" ]; then
     step "Memasang dependensi PHP"
 
-    if ! command -v composer >/dev/null 2>&1; then
+    if [ -z "${COMPOSER84:-}" ] && ! command -v composer >/dev/null 2>&1; then
         echo "composer.lock berubah, tetapi perintah composer tidak ditemukan di server." >&2
-        echo "Jalankan 'composer install --no-dev --optimize-autoloader' secara manual, lalu ulangi dengan --no-pull." >&2
+        echo "Jalankan '\$COMPOSER84 install --no-dev --optimize-autoloader' secara manual, lalu ulangi dengan --no-pull." >&2
         exit 1
     fi
 
-    composer install --no-dev --optimize-autoloader --no-interaction
+    # Tanpa tanda kutip: COMPOSER84 berisi "php composer" (dua kata).
+    $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction
 fi
 
 step "Migrasi database"

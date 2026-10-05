@@ -15,7 +15,7 @@ Symlink ini penting. Tanpa penyejajaran itu, perhitungan base path Laravel meles
 
 ## Jangan pernah cache route
 
-`php artisan route:cache` — dan karena itu juga `php artisan optimize` — **merusak seluruh
+`$PHP84 artisan route:cache` — dan karena itu juga `$PHP84 artisan optimize` — **merusak seluruh
 aplikasi** pada pemasangan subfolder. Halaman depan akan menjawab `405 Method Not Allowed`
 dengan header `Allow` yang berisi verb yang tidak masuk akal.
 
@@ -28,7 +28,7 @@ di-cache — tanpa cache, pencocokan memakai request asli dan semuanya normal.
 Cache lain aman dan tetap dianjurkan:
 
 ```bash
-php artisan config:cache && php artisan view:cache && php artisan event:cache
+$PHP84 artisan config:cache && $PHP84 artisan view:cache && $PHP84 artisan event:cache
 ```
 
 Kalau suatu saat aplikasi dipindah ke document root tersendiri, larangan ini gugur.
@@ -54,35 +54,38 @@ adanya prefiks `/lms`.
 Kode sampai ke server lewat `git pull`. Alurnya:
 
 1. Di PC lokal, gabungkan pekerjaan ke `master` lalu `git push origin master`.
-2. Di terminal server, aktifkan lingkungan dulu (menyiapkan `$PHP84`), lalu satu perintah ini
-   menarik kode terbaru dan menjalankan semua langkah di bawah dengan urutan yang benar:
+2. Di server, satu perintah ini menarik kode terbaru dan menjalankan semua langkah di bawah
+   dengan urutan yang benar:
 
 ```bash
-source ~/activate.sh
-PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
+bash ~/school/lms-engine/scripts/server-deploy.sh
 ```
 
 Tambahkan `--demo` untuk sekalian menjalankan `DemoSeeder`, atau `--no-pull` bila kode sudah
 diperbarui manual. Skrip ini:
 
+- mengaktifkan `scripts/activate.sh` (PHP 8.4 `$PHP84` dan `$COMPOSER84`) bila terminal belum,
+  dan berhenti bila PHP yang terpakai bukan 8.3+;
 - menolak `git pull` bila ada file yang diubah langsung di server, supaya tidak bentrok;
 - menjalankan ulang dirinya setelah pull, karena skrip ini sendiri bisa ikut berubah;
-- menjalankan `composer install --no-dev` hanya bila `composer.lock` berubah;
+- menjalankan `$COMPOSER84 install --no-dev` hanya bila `composer.lock` berubah;
 - berhenti sebelum migrasi bila `DB_CONNECTION` bukan `mysql`;
 - menghapus cache route yang tertinggal dan memperingatkan bila aset tidak di-build untuk `/lms`;
 - memeriksa halaman depan menjawab 200 di akhir.
 
-`PHP84=$PHP84` di depan perintah memastikan skrip memakai PHP 8.4 walau variabel itu tidak
-di-export di shell.
+Untuk perintah manual lain (artisan, composer), jalankan dulu
+`source ~/school/lms-engine/scripts/activate.sh`, lalu pakai `$PHP84 artisan ...` dan
+`$COMPOSER84 ...`. Bentuk lama `PHP84=$PHP84 bash .../server-deploy.sh` tetap berfungsi.
 
 ## Urutan rilis
 
 ```bash
+source ~/school/lms-engine/scripts/activate.sh
 cd ~/school/lms-engine
-php artisan migrate --force
-php artisan optimize:clear
-php artisan config:cache && php artisan view:cache && php artisan event:cache
-php artisan storage:link
+$PHP84 artisan migrate --force
+$PHP84 artisan optimize:clear
+$PHP84 artisan config:cache && $PHP84 artisan view:cache && $PHP84 artisan event:cache
+$PHP84 artisan storage:link
 ```
 
 Jangan unggah `bootstrap/cache/` — biarkan digenerate di server.
@@ -92,7 +95,7 @@ Jangan unggah `bootstrap/cache/` — biarkan digenerate di server.
 Setelah migrasi pertama kali di server sekolah baru (bukan demo), jalankan wizard sekali:
 
 ```bash
-php artisan sekolah:setup
+$PHP84 artisan sekolah:setup
 ```
 
 Wizard ini interaktif (tanya nama sekolah, NPSN, nama/email admin pertama, label tahun
@@ -111,7 +114,7 @@ terakhir) berjalan lewat scheduler Laravel. Tambahkan satu Cron Job di cPanel
 (*Cron Jobs* → *Common Settings: Once Per Minute*):
 
 ```bash
-source ~/activate.sh && cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
+source ~/school/lms-engine/scripts/activate.sh && cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
 ```
 
 Berkas tersimpan di `storage/app/private/backups` dan bisa diunduh admin dari menu
@@ -121,13 +124,13 @@ ada di server ikut hilang bila server rusak.
 Pemulihan (menimpa seluruh data; buat cadangan terbaru dulu):
 
 ```bash
-php artisan sekolah:restore cadangan-2026-09-26-013000.zip
+$PHP84 artisan sekolah:restore cadangan-2026-09-26-013000.zip
 ```
 
 ## Data demo
 
 ```bash
-php artisan db:seed --class=DemoSeeder --force
+$PHP84 artisan db:seed --class=DemoSeeder --force
 ```
 
 `DemoSeeder` memakai `updateOrCreate` di seluruh bagiannya, jadi aman dijalankan berulang.
