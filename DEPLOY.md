@@ -54,10 +54,11 @@ adanya prefiks `/lms`.
 Kode sampai ke server lewat `git pull`. Alurnya:
 
 1. Di PC lokal, gabungkan pekerjaan ke `master` lalu `git push origin master`.
-2. Di server, satu perintah ini menarik kode terbaru dan menjalankan semua langkah di bawah
-   dengan urutan yang benar:
+2. Di terminal server, aktifkan lingkungan dulu (menyiapkan `$PHP84`), lalu satu perintah ini
+   menarik kode terbaru dan menjalankan semua langkah di bawah dengan urutan yang benar:
 
 ```bash
+source ~/activate.sh
 PHP84=$PHP84 bash ~/school/lms-engine/scripts/server-deploy.sh
 ```
 
@@ -110,7 +111,7 @@ terakhir) berjalan lewat scheduler Laravel. Tambahkan satu Cron Job di cPanel
 (*Cron Jobs* → *Common Settings: Once Per Minute*):
 
 ```bash
-cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
+source ~/activate.sh && cd ~/school/lms-engine && $PHP84 artisan schedule:run >> /dev/null 2>&1
 ```
 
 Berkas tersimpan di `storage/app/private/backups` dan bisa diunduh admin dari menu

@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Full project documentation (Indonesian) lives in `README.md` and `docs/`: architecture, development, deployment (cPanel in `DEPLOY.md`, VPS in `docs/deploy-vps.md`), operations, and the handover notes in `docs/serah-terima.md`. Keep them updated when behavior changes.
+Full project documentation (Indonesian) lives in `README.md` and `docs/`: handover (`docs/serah-terima.md`), architecture and development (`docs/teknis.md`), and server commands/operations (`docs/server.md`, cPanel details in `DEPLOY.md`). Keep them updated when behavior changes.
 
 ## Project Structure & Module Organization
 
